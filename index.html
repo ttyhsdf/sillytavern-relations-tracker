@@ -1,0 +1,68 @@
+<div id="rt-overlay" class="rt-overlay" style="display: none;"></div>
+
+<div id="rt-modal" class="rt-modal" style="display: none;">
+    <div class="rt-header">
+        <h2><i class="fa-solid fa-heart"></i> Relations Tracker</h2>
+        <button id="rt-close-btn" class="rt-close-btn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div class="rt-body">
+        <div id="rt-cards-container" class="rt-cards-container">
+            <!-- Cards will be injected here via JS -->
+            <div class="rt-empty-state">No relationship data found in chat history.</div>
+        </div>
+        
+        <div class="rt-controls">
+            <button id="rt-add-btn" class="menu_button"><i class="fa-solid fa-plus"></i> Add Relationship</button>
+            <button id="rt-refresh-btn" class="menu_button"><i class="fa-solid fa-rotate-right"></i> Scan Chat</button>
+        </div>
+    </div>
+</div>
+
+<template id="rt-card-template">
+    <div class="rt-card">
+        <div class="rt-card-header">
+            <div class="rt-names">
+                <span class="rt-source" contenteditable="true" data-field="source">Name</span>
+                <i class="fa-solid fa-arrow-right"></i>
+                <span class="rt-target" contenteditable="true" data-field="target">Target</span>
+            </div>
+            <button class="rt-delete-btn"><i class="fa-solid fa-trash"></i></button>
+        </div>
+        
+        <div class="rt-card-body">
+            <div class="rt-row">
+                <div class="rt-field-group">
+                    <label>Bond Type</label>
+                    <select class="rt-select rt-bond-type" data-field="bond">
+                        <option value="[R]">[R] Romantic</option>
+                        <option value="[P]">[P] Platonic</option>
+                        <option value="[F]">[F] Family</option>
+                        <option value="[H]">[H] Hostile</option>
+                    </select>
+                </div>
+                
+                <div class="rt-field-group rt-flex-grow">
+                    <label>Tier</label>
+                    <input type="text" class="rt-input rt-tier" data-field="tier" placeholder="Tier Name">
+                </div>
+            </div>
+            
+            <div class="rt-row">
+                <div class="rt-field-group rt-flex-grow">
+                    <label>Relationship Label</label>
+                    <input type="text" class="rt-input rt-label" data-field="label" placeholder="Short description">
+                </div>
+            </div>
+            
+            <div class="rt-row">
+                <div class="rt-field-group rt-flex-grow">
+                    <label>Charm Points (CP): <span class="rt-cp-value">0</span></label>
+                    <div class="rt-slider-container">
+                        <input type="range" min="-100" max="100" value="0" class="rt-cp-slider" data-field="cp">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
