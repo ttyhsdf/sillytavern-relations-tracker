@@ -188,21 +188,7 @@ async function initUI() {
             return;
         }
         
-        // Custom toggle logic for our drawer, just in case ST's delegate doesn't catch it
-        const drawerToggle = tempDiv.querySelector('.inline-drawer-toggle');
-        const drawerContent = tempDiv.querySelector('.inline-drawer-content');
-        const drawerIcon = tempDiv.querySelector('.inline-drawer-icon');
-        
-        if (drawerToggle && drawerContent) {
-            drawerToggle.addEventListener('click', () => {
-                const isHidden = drawerContent.style.display === 'none';
-                drawerContent.style.display = isHidden ? 'block' : 'none';
-                if (drawerIcon) {
-                    drawerIcon.classList.toggle('down', !isHidden);
-                    drawerIcon.classList.toggle('up', isHidden);
-                }
-            });
-        }
+        // Let SillyTavern's native global event listener handle the .inline-drawer-toggle
         
         document.getElementById('rt-add-btn').addEventListener('click', addRelationship);
         document.getElementById('rt-refresh-btn').addEventListener('click', () => {
