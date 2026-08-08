@@ -5,8 +5,6 @@ const extensionName = "sillytavern-relations-tracker";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 
 let relationsData = [];
-let modalElement = null;
-let overlayElement = null;
 
 // Parse RELATIONS_ARCHIVE tag
 // Format: <!--RELATIONS_ARCHIVE:Name->Target=CP,TIER,BOND,LABEL / Name2->Target2=...-->
@@ -20,8 +18,6 @@ function parseRelationsTag(text) {
     const parsed = [];
     
     for (const rel of relations) {
-        // e.g. Name->Target=CP,TIER,BOND,LABEL
-        // The arrow might be → or ->
         const arrowSplit = rel.split(/→|->/);
         if (arrowSplit.length < 2) continue;
         
@@ -66,6 +62,8 @@ function scanChatForRelations() {
     // Scan backwards to find the most recent tag
     for (let i = context.chat.length - 1; i >= 0; i--) {
         const msg = context.chat[i].mes;
+        if (!msg) continue;
+        
         const parsed = parseRelationsTag(msg);
         if (parsed) {
             relationsData = parsed;
@@ -87,20 +85,6 @@ function injectIntoPrompt() {
     }
 }
 
-// UI Logic
-function openModal() {
-    if (overlayElement) overlayElement.style.display = 'block';
-    if (modalElement) modalElement.style.display = 'flex';
-    renderCards();
-}
-
-function closeModal() {
-    if (overlayElement) overlayElement.style.display = 'none';
-    if (modalElement) modalElement.style.display = 'none';
-    // Save state on close
-    injectIntoPrompt();
-}
-
 function renderCards() {
     const container = document.getElementById('rt-cards-container');
     if (!container) return;
@@ -113,6 +97,7 @@ function renderCards() {
     }
     
     const template = document.getElementById('rt-card-template');
+    if (!template) return;
     
     relationsData.forEach((rel, index) => {
         const clone = template.content.cloneNode(true);
@@ -194,21 +179,30 @@ async function initUI() {
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlContent;
         
-        document.body.appendChild(tempDiv);
+        // Inject into extensions settings panel
+        const extSettings = document.getElementById('extensions_settings');
+        if (extSettings) {
+            extSettings.appendChild(tempDiv);
+        } else {
+            console.error("[Relations Tracker] Could not find #extensions_settings");
+            return;
+        }
         
-        overlayElement = document.getElementById('rt-overlay');
-        modalElement = document.getElementById('rt-modal');
+        // Custom toggle logic for our drawer, just in case ST's delegate doesn't catch it
+        const drawerToggle = tempDiv.querySelector('.inline-drawer-toggle');
+        const drawerContent = tempDiv.querySelector('.inline-drawer-content');
+        const drawerIcon = tempDiv.querySelector('.inline-drawer-icon');
         
-        // FAB Button
-        const fab = document.createElement('div');
-        fab.className = 'rt-fab';
-        fab.innerHTML = '<i class="fa-solid fa-heart"></i>';
-        fab.title = "Relations Tracker";
-        document.body.appendChild(fab);
-        
-        fab.addEventListener('click', openModal);
-        document.getElementById('rt-close-btn').addEventListener('click', closeModal);
-        overlayElement.addEventListener('click', closeModal);
+        if (drawerToggle && drawerContent) {
+            drawerToggle.addEventListener('click', () => {
+                const isHidden = drawerContent.style.display === 'none';
+                drawerContent.style.display = isHidden ? 'block' : 'none';
+                if (drawerIcon) {
+                    drawerIcon.classList.toggle('down', !isHidden);
+                    drawerIcon.classList.toggle('up', isHidden);
+                }
+            });
+        }
         
         document.getElementById('rt-add-btn').addEventListener('click', addRelationship);
         document.getElementById('rt-refresh-btn').addEventListener('click', () => {
@@ -236,13 +230,9 @@ jQuery(async () => {
         scanChatForRelations();
     }, 1000);
     
-    // Listen for new messages to update state if the AI manually outputs a tag
+    // Listen for new messages
     if (eventSource) {
-        eventSource.on(event_types.MESSAGE_RECEIVED, () => {
-            scanChatForRelations();
-        });
-        eventSource.on(event_types.CHAT_CHANGED, () => {
-            scanChatForRelations();
-        });
+        eventSource.on(event_types.MESSAGE_RECEIVED, () => scanChatForRelations());
+        eventSource.on(event_types.CHAT_CHANGED, () => scanChatForRelations());
     }
 });
