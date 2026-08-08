@@ -1,9 +1,9 @@
 import { extension_settings, getContext } from "../../../extensions.js";
-import { eventSource, event_types, generateRaw, saveSettingsDebounced, setExtensionPrompt } from "../../../../script.js";
+import { eventSource, event_types, generateRaw, saveSettingsDebounced, setExtensionPrompt, saveChatDebounced } from "../../../../script.js";
 import { ConnectionManagerRequestService } from "../../shared.js";
-import { systemPrompts, VALID_TIERS, VALID_BONDS } from "./prompts.js";
+import { systemPrompts, VALID_TIERS, VALID_BONDS, resumePrompts, customBondPrompt } from "./prompts.js";
 import { getTierFromCP, getTierLabel, getTierLabelsForBond } from "./tiers.js";
-import { ALL_BONDS, isTransitionAllowed, clampCP } from "./rules.js";
+import { ALL_BONDS, isTransitionAllowed, clampCP, updateCustomBonds, VALID_BONDS as RULES_VALID_BONDS } from "./rules.js";
 import { createHistoryEntry, addHistoryEntry, getPairKey, renderHistoryHTML } from "./history.js";
 import { smartScan, fullScan } from "./scanner.js";
 import { checkInteraction, calculateDecay } from "./decay.js";
@@ -30,7 +30,9 @@ const defaultSettings = {
     relations: {},
     history: {},
     milestones: {},
-    enableDecay: true
+    enableDecay: true,
+    customBonds: [],
+    resumeLength: 'short'
 };
 
 // =====================
@@ -56,7 +58,11 @@ function loadSettings() {
     $('#rt-scan-depth').val(settings.scanDepth);
     $('#rt-prompt-lang').val(settings.promptLang);
     $('#rt-connection-profile').val(settings.connectionProfile);
+    $('#rt-resume-length').val(settings.resumeLength || 'short');
     $('#rt-debug').prop('checked', settings.debug);
+    
+    updateCustomBonds(settings.customBonds);
+    
     loadRelationsFromSettings();
 }
 
@@ -95,7 +101,9 @@ function saveSettings() {
         relations: current.relations || {},
         history: current.history || {},
         milestones: current.milestones || {},
-        enableDecay: current.enableDecay !== undefined ? current.enableDecay : true
+        enableDecay: current.enableDecay !== undefined ? current.enableDecay : true,
+        customBonds: current.customBonds || [],
+        resumeLength: $('#rt-resume-length').val() || 'short'
     };
     saveSettingsDebounced();
 }
@@ -219,8 +227,19 @@ function scanChatForRelations() {
 }
 
 function injectIntoPrompt() {
-    const tag = buildRelationsTag();
+    let tag = buildRelationsTag();
     if (!tag) return;
+    
+    const settings = getSettings();
+    if (settings.nlResume) {
+        if (typeof settings.nlResume === 'string') {
+            tag += `\n[RELATIONS SUMMARY: ${settings.nlResume}]`;
+        } else if (Array.isArray(settings.nlResume)) {
+            const summaryStr = settings.nlResume.map(c => `${c.character}: ${c.summary}`).join('\n');
+            tag += `\n[RELATIONS SUMMARY:\n${summaryStr}\n]`;
+        }
+    }
+    
     try {
         setExtensionPrompt(extensionName, tag, 1, 0);
     } catch {
@@ -248,6 +267,16 @@ async function runAIAnalysis() {
     const relationsJson = JSON.stringify(relationsData, null, 2);
     let promptInstruction = systemPrompts[settings.promptLang] || systemPrompts['EN'];
     promptInstruction = promptInstruction.replace('{{RELATIONS_JSON}}', relationsJson);
+    
+    let customBondsListStr = "";
+    let customBondsRulesStr = "";
+    if (settings.customBonds && settings.customBonds.length > 0) {
+        customBondsListStr = ", " + settings.customBonds.map(b => `${b.code} ${b.name}`).join(", ");
+        customBondsRulesStr = "\n" + settings.customBonds.map(b => `• ${b.code} ${b.name}: ${b.behavior || 'Follow standard relationship rules.'}`).join("\n");
+    }
+    promptInstruction = promptInstruction.replace('{{CUSTOM_BONDS_LIST}}', customBondsListStr);
+    promptInstruction = promptInstruction.replace('{{CUSTOM_BONDS_RULES}}', customBondsRulesStr);
+
     const sysPrompt = `You are a background relation tracking AI.\n\n${promptInstruction}`;
 
     try {
@@ -325,6 +354,7 @@ async function runAIAnalysis() {
             showHybridBanner(newRelations, msgIndex);
         } else {
             applyChanges(newRelations, msgIndex);
+            await generateResume(newRelations);
         }
 
     } catch (err) {
@@ -345,6 +375,9 @@ function applyChanges(newRelations, msgIndex) {
             const ms = createMilestoneFromAI(newRel.milestone, msgIndex);
             addMilestone(milestonesMap, pairKey, ms);
             changeSummary.push(`🏆 Milestone for ${newRel.source}→${newRel.target}`);
+            if (getSettings().enableSystemMessages !== false) {
+                pushSystemMessage(`[RT_EVENT] 🏆 Milestone: ${newRel.source} & ${newRel.target}: ${ms.event}`);
+            }
         }
         delete newRel.milestone;
 
@@ -357,6 +390,10 @@ function applyChanges(newRelations, msgIndex) {
                 addHistoryEntry(historyMap, pairKey, entry);
                 const diff = newRel.cp - oldRel.cp;
                 if (diff !== 0) changeSummary.push(`${newRel.source} (${diff > 0 ? '+' : ''}${diff} CP)`);
+                
+                if (oldRel.tier !== newRel.tier && getSettings().enableSystemMessages !== false) {
+                    pushSystemMessage(`[RT_EVENT] Relationship between ${newRel.source} and ${newRel.target} shifted to ${newRel.tier}.`);
+                }
             }
             newRel.locked = oldRel.locked || false;
             if (newRel.lastInteractionMsg === undefined) {
@@ -412,15 +449,9 @@ function hideHybridBanner() {
 // Visual Helpers
 // =====================
 function getBondColor(bond) {
-    switch(bond) {
-        case '[R]': return '#ff6b81';
-        case '[F]': return '#70a1ff';
-        case '[P]': return '#7bed9f';
-        case '[PL]': return '#ffd32a';
-        case '[H]': return '#ff4757';
-        case '[C]': return '#a29bfe';
-        default: return '#ffa502';
-    }
+    const bondInfo = ALL_BONDS.find(b => b.code === bond);
+    if (bondInfo && bondInfo.color) return bondInfo.color;
+    return '#ffa502'; // default
 }
 
 function updateSliderStyle(slider, cp, bond) {
@@ -711,7 +742,7 @@ async function initUI() {
 
         $('#rt-smart-scan, #rt-debug').on('change', saveSettings);
         $('#rt-scan-depth').on('input change', saveSettings);
-        $('#rt-prompt-lang, #rt-connection-profile').on('change', saveSettings);
+        $('#rt-prompt-lang, #rt-connection-profile, #rt-resume-length').on('change', saveSettings);
 
         document.getElementById('rt-add-btn').addEventListener('click', addRelationship);
         document.getElementById('rt-refresh-btn').addEventListener('click', () => scanChatForRelations());
@@ -721,13 +752,179 @@ async function initUI() {
             if (e.target.files[0]) { importRelations(e.target.files[0]); e.target.value = ''; }
         });
 
-        document.getElementById('rt-hybrid-apply').addEventListener('click', () => {
-            if (pendingChanges) { applyChanges(pendingChanges.newRelations, pendingChanges.msgIndex); hideHybridBanner(); }
+        document.getElementById('rt-hybrid-apply').addEventListener('click', async () => {
+            if (pendingChanges) { 
+                applyChanges(pendingChanges.newRelations, pendingChanges.msgIndex); 
+                hideHybridBanner(); 
+                await generateResume(relationsData);
+            }
         });
         document.getElementById('rt-hybrid-dismiss').addEventListener('click', () => {
             hideHybridBanner();
             if (typeof toastr !== "undefined") toastr.info("Dismissed.", "RT");
         });
+
+        // Auto-install Regex Rules
+        document.getElementById('rt-install-regex-btn').addEventListener('click', () => {
+            if (!extension_settings.regex) extension_settings.regex = [];
+            let added = 0;
+
+            const formatRule = extension_settings.regex.find(r => r.scriptName === "RT_EVENT_FORMAT");
+            if (!formatRule) {
+                extension_settings.regex.push({
+                    id: crypto.randomUUID ? crypto.randomUUID() : "rt_fmt_" + Date.now(),
+                    scriptName: "RT_EVENT_FORMAT",
+                    findRegex: "^\\[RT_EVENT\\]\\s*(.*)",
+                    replaceString: "<div style=\"color: #a29bfe; font-style: italic; text-align: center; margin: 15px 0; padding: 10px; background: rgba(162, 155, 254, 0.1); border-radius: 8px; font-family: 'Georgia', serif;\">✧ $1 ✧</div>",
+                    trimString: "",
+                    placement: [1, 2],
+                    disabled: false,
+                    markdownOnly: false,
+                    promptOnly: false,
+                    runOnEdit: true,
+                    substituteRegex: false,
+                    minDepth: null,
+                    maxDepth: null,
+                    only_format_display: true,
+                    only_format_prompt: false
+                });
+                added++;
+            }
+
+            const hideRule = extension_settings.regex.find(r => r.scriptName === "RT_EVENT_HIDE");
+            if (!hideRule) {
+                extension_settings.regex.push({
+                    id: crypto.randomUUID ? crypto.randomUUID() : "rt_hide_" + Date.now(),
+                    scriptName: "RT_EVENT_HIDE",
+                    findRegex: "^\\[RT_EVENT\\].*\\n?",
+                    replaceString: "",
+                    trimString: "",
+                    placement: [1, 2],
+                    disabled: false,
+                    markdownOnly: false,
+                    promptOnly: false,
+                    runOnEdit: true,
+                    substituteRegex: false,
+                    minDepth: null,
+                    maxDepth: null,
+                    only_format_display: false,
+                    only_format_prompt: true
+                });
+                added++;
+            }
+
+            if (added > 0) {
+                saveSettingsDebounced();
+                if (typeof toastr !== "undefined") toastr.success("Regex rules installed! Please refresh the page (F5) to see them in the Regex tab.", "Relations Tracker");
+            } else {
+                if (typeof toastr !== "undefined") toastr.info("Regex rules are already installed.", "Relations Tracker");
+            }
+        });
+
+        // Custom Bonds Generate Button
+        document.getElementById('rt-cb-generate').addEventListener('click', async () => {
+            const settings = getSettings();
+            const name = document.getElementById('rt-cb-name').value.trim();
+            const hint = document.getElementById('rt-cb-behavior').value.trim();
+            
+            if (!name) return typeof toastr !== 'undefined' ? toastr.warning("Please enter a Name first (e.g. Mentor)") : null;
+            
+            const cp = settings.connectionProfile;
+            if (!cp) return typeof toastr !== 'undefined' ? toastr.error("Select a Connection Profile first for auto-generation.") : null;
+            
+            let hintSection = "";
+            if (hint) hintSection = `The user has provided a hint/idea for this bond: "${hint}". Expand on this idea.`;
+            else hintSection = `The user has not provided a hint, use your imagination based on the name.`;
+            
+            const prompt = customBondPrompt
+                .replace('{{BOND_NAME}}', name)
+                .replace('{{HINT_SECTION}}', hintSection);
+            
+            if (typeof toastr !== 'undefined') toastr.info("Generating options via AI...", "Relations Tracker");
+            try {
+                const response = await ConnectionManagerRequestService.sendRequest(
+                    cp, [{ role: "user", content: prompt }], undefined, { stream: false, extractData: true }
+                );
+                
+                let rawText = "";
+                if (typeof response === 'string') rawText = response;
+                else if (response && response.text) rawText = response.text;
+                
+                let options = [];
+                try {
+                    // Try parsing JSON array directly or extracting it via regex
+                    const jsonMatch = rawText.match(/\[([\s\S]*?)\]/);
+                    if (jsonMatch) {
+                        options = JSON.parse(jsonMatch[0]);
+                    } else {
+                        options = JSON.parse(rawText);
+                    }
+                } catch (e) {
+                    console.error("[RT] Failed to parse JSON options, falling back to split", rawText);
+                    // Fallback if AI didn't return valid JSON array
+                    options = rawText.split('\n').filter(l => l.trim().length > 5).slice(0, 3);
+                }
+                
+                const container = document.getElementById('rt-cb-options');
+                container.innerHTML = '';
+                container.style.display = 'flex';
+                
+                if (!options || options.length === 0) {
+                    return typeof toastr !== 'undefined' ? toastr.error("AI failed to generate valid options.") : null;
+                }
+                
+                options.forEach((opt, idx) => {
+                    const btn = document.createElement('div');
+                    btn.className = 'menu_button interactable';
+                    btn.style.cssText = 'white-space: normal; text-align: left; padding: 6px; font-size: 0.85em; line-height: 1.2;';
+                    btn.innerHTML = `<b>Option ${idx + 1}:</b> ${escapeHtml(opt)}`;
+                    btn.addEventListener('click', () => {
+                        document.getElementById('rt-cb-behavior').value = opt;
+                        container.style.display = 'none';
+                        if (typeof toastr !== 'undefined') toastr.success("Option applied!");
+                    });
+                    container.appendChild(btn);
+                });
+                
+            } catch (e) {
+                console.error("[RT] Generation failed:", e);
+                return typeof toastr !== 'undefined' ? toastr.error("Failed to generate behavior.") : null;
+            }
+        });
+
+        // Custom Bonds Add Button
+        document.getElementById('rt-cb-add').addEventListener('click', async () => {
+            const settings = getSettings();
+            const code = document.getElementById('rt-cb-code').value.trim();
+            const name = document.getElementById('rt-cb-name').value.trim();
+            const color = document.getElementById('rt-cb-color').value;
+            const behavior = document.getElementById('rt-cb-behavior').value.trim();
+            
+            if (!code || !name) return typeof toastr !== 'undefined' ? toastr.warning("Code and Name are required") : null;
+            if (!code.startsWith('[')) return typeof toastr !== 'undefined' ? toastr.warning("Code must start with '[' e.g. [M]") : null;
+            if (!behavior) return typeof toastr !== 'undefined' ? toastr.warning("Behavior prompt is required. Use the Generate button if needed.") : null;
+            
+            if (!settings.customBonds) settings.customBonds = [];
+            settings.customBonds.push({ code, name, color, behavior });
+            saveSettings();
+            
+            document.getElementById('rt-cb-code').value = '';
+            document.getElementById('rt-cb-name').value = '';
+            document.getElementById('rt-cb-behavior').value = '';
+            updateCustomBonds(settings.customBonds);
+            renderCustomBonds();
+        });
+        
+        // Expose global delete for CB
+        window.deleteCustomBond = function(idx) {
+            const settings = getSettings();
+            if (settings.customBonds && settings.customBonds[idx]) {
+                settings.customBonds.splice(idx, 1);
+                saveSettings();
+                updateCustomBonds(settings.customBonds);
+                renderCustomBonds();
+            }
+        };
 
         // Widget logic
         const widgetIcon = document.querySelector('.rt-float-icon');
@@ -760,12 +957,155 @@ async function initUI() {
     }
 }
 
+function renderCustomBonds() {
+    const list = document.getElementById('rt-custom-bonds-list');
+    if (!list) return;
+    const settings = getSettings();
+    const cbs = settings.customBonds || [];
+    if (cbs.length === 0) {
+        list.innerHTML = `<div style="text-align:center;color:var(--grey50);font-size:0.8em;">No custom bonds yet.</div>`;
+        return;
+    }
+    list.innerHTML = cbs.map((cb, idx) => `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 4px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 12px; height: 12px; border-radius: 50%; background: ${cb.color}"></div>
+                <b>${cb.code} ${cb.name}</b>
+            </div>
+            <div class="menu_button fa-solid fa-trash" style="padding: 5px;" onclick="window.deleteCustomBond(${idx})" title="Delete"></div>
+        </div>
+        <div style="font-size: 0.8em; color: var(--grey50); padding: 0 5px 5px 25px;">${cb.behavior}</div>
+    `).join('');
+}
+
+function renderGallery() {
+    const container = document.getElementById('rt-gallery-container');
+    if (!container) return;
+    let allMilestones = [];
+    for (const pairKey in milestonesMap) {
+        for (const ms of milestonesMap[pairKey]) {
+            allMilestones.push({ pairKey, ...ms });
+        }
+    }
+    allMilestones.sort((a, b) => b.timestamp - a.timestamp); // newest first
+    
+    if (allMilestones.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: var(--grey50); font-size: 0.8em;">No milestones recorded yet.</div>`;
+        return;
+    }
+    
+    container.innerHTML = allMilestones.map(ms => {
+        const timeStr = new Date(ms.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        return `<div style="margin-bottom: 5px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 4px; border-left: 3px solid #ffeb3b;">
+            <div style="font-size: 0.8em; color: var(--grey50); display: flex; justify-content: space-between;">
+                <span>${ms.pairKey}</span>
+                <span>${timeStr}</span>
+            </div>
+            <div>${ms.icon} ${ms.event}</div>
+        </div>`;
+    }).join('');
+}
+
+function pushSystemMessage(text) {
+    const context = getContext();
+    if (!context || !context.chat) return;
+    
+    context.chat.push({
+        is_system: true,
+        name: "System",
+        mes: `<i>${text}</i>`,
+        send_date: Date.now(),
+        is_user: false
+    });
+    
+    if (typeof saveChatDebounced !== 'undefined') saveChatDebounced();
+    if (eventSource) eventSource.emit(event_types.CHAT_CHANGED);
+}
+
+async function generateResume(relationsData) {
+    const settings = getSettings();
+    const cp = settings.connectionProfile;
+    if (!cp) return; 
+    
+    const promptTemplate = resumePrompts[settings.promptLang] || resumePrompts['EN'];
+    let lengthInstruction = "";
+    if (settings.resumeLength === 'short') lengthInstruction = "Keep it very brief (1-3 sentences total).";
+    else if (settings.resumeLength === 'medium') lengthInstruction = "Provide a moderate amount of detail (1 paragraph per major character).";
+    else if (settings.resumeLength === 'detailed') lengthInstruction = "Provide a highly detailed summary covering every nuanced relationship (2-3 sentences per character).";
+    
+    const prompt = promptTemplate
+        .replace('{{RELATIONS_JSON}}', JSON.stringify(relationsData, null, 2))
+        .replace('{{LENGTH_INSTRUCTION}}', lengthInstruction);
+    
+    try {
+        const response = await ConnectionManagerRequestService.sendRequest(
+            cp,
+            [{ role: "user", content: prompt }],
+            undefined,
+            { stream: false, extractData: true }
+        );
+        let summary = "";
+        if (typeof response === 'string') summary = response.trim();
+        else if (response && response.text) summary = response.text.trim();
+        
+        if (summary) {
+            let parsedCards = [];
+            try {
+                const match = summary.match(/\[([\s\S]*?)\]/);
+                if (match) parsedCards = JSON.parse(match[0]);
+                else parsedCards = JSON.parse(summary);
+            } catch(e) {
+                console.warn("[RT] Could not parse AI resume as JSON, storing raw text", summary);
+                parsedCards = summary;
+            }
+            settings.nlResume = parsedCards;
+            saveSettings();
+            renderResumeCards(parsedCards);
+            injectIntoPrompt();
+        }
+    } catch (err) {
+        console.error("[RT] Generate resume failed:", err);
+    }
+}
+
+function renderResumeCards(cards) {
+    const container = document.getElementById('rt-nl-resume-cards');
+    if (!container) return;
+    if (!cards) {
+        container.innerHTML = '<div style="text-align: center; color: var(--grey50); font-size: 0.8em; font-style: italic; padding: 10px;">No character cards generated yet.</div>';
+        return;
+    }
+    if (typeof cards === 'string') {
+        container.innerHTML = `<div style="padding: 10px; font-style: italic; color: var(--grey50); font-size: 0.85em;">${escapeHtml(cards)}</div>`;
+        return;
+    }
+    if (Array.isArray(cards) && cards.length > 0) {
+        container.innerHTML = cards.map(c => `
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; margin-bottom: 5px;">
+                <div style="background: rgba(0,0,0,0.3); padding: 5px 10px; font-weight: bold; font-size: 0.9em; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--SmartThemeBodyColor);">
+                    <i class="fa-solid fa-user" style="margin-right: 5px; color: #a29bfe;"></i> ${escapeHtml(c.character || 'Unknown')}
+                </div>
+                <div style="padding: 8px 10px; font-size: 0.85em; color: var(--SmartThemeBodyColor); line-height: 1.4;">
+                    ${escapeHtml(c.summary || '')}
+                </div>
+            </div>
+        `).join('');
+    } else {
+        container.innerHTML = '<div style="text-align: center; color: var(--grey50); font-size: 0.8em; font-style: italic; padding: 10px;">AI returned empty cards list.</div>';
+    }
+}
+
 jQuery(async () => {
     const link = document.createElement('link');
     link.rel = 'stylesheet'; link.type = 'text/css';
     link.href = `${extensionFolderPath}/style.css`;
     document.head.appendChild(link);
     await initUI();
+    renderCustomBonds();
+    renderGallery();
+    const settings = getSettings();
+    renderResumeCards(settings.nlResume);
+    
     setTimeout(() => scanChatForRelations(), 1000);
     if (eventSource) {
         eventSource.on(event_types.MESSAGE_RECEIVED, async () => { scanChatForRelations(); await runAIAnalysis(); });

@@ -40,7 +40,7 @@ Each element in the array is an object:
 
 ─── VALID VALUES ───
 tier  — one of: Frozen, Cold, Distant, Neutral, Warm, Close, Devoted
-bond  — one of: [R] Romantic, [P] Platonic, [PL] Platonic Love, [F] Family, [H] Hostile, [C] Complicated
+bond  — one of: [R] Romantic, [P] Platonic, [PL] Platonic Love, [F] Family, [H] Hostile, [C] Complicated{{CUSTOM_BONDS_LIST}}
 
 ─── RULES ───
 1. cp is an integer from -100 to 100. Change it by ±1…5 per message based on emotional impact.
@@ -53,11 +53,12 @@ bond  — one of: [R] Romantic, [P] Platonic, [PL] Platonic Love, [F] Family, [H
 • [P] Platonic → [R] Romantic ONLY if cp > 60.
 • [H] Hostile → [P] Platonic if cp > 0; → [R] Romantic if cp > 20 (enemies-to-lovers).
 • [C] Complicated is a transitional state. Try to resolve it to another bond when evidence is clear.
-• [PL] Platonic Love is deep non-romantic devotion; it does NOT auto-transition to [R].
+• [PL] Platonic Love is deep non-romantic devotion; it does NOT auto-transition to [R].{{CUSTOM_BONDS_RULES}}
 
-─── MULTI-CHARACTER ───
+─── MULTI-CHARACTER & FACTIONS ───
 • Track ALL pairs that interact, not just User ↔ Character.
 • If two non-user characters interact meaningfully, add or update their pair entry.
+• FACTIONS: Automatically track relationships with Factions, Groups, or Guilds (e.g., 'City Guards', 'Mages Guild') if they are mentioned. Treat them as regular characters.
 • Use consistent name ordering (alphabetical by char_a) to avoid duplicates.
 
 ─── MILESTONES ───
@@ -89,7 +90,7 @@ Return ONLY a valid JSON array. No markdown fences, no commentary, no explanatio
 
 ─── ДОПУСТИМЫЕ ЗНАЧЕНИЯ ───
 tier  — одно из: Frozen, Cold, Distant, Neutral, Warm, Close, Devoted
-bond  — одно из: [R] Романтика, [P] Платоника, [PL] Платоническая любовь, [F] Семья, [H] Вражда, [C] Сложные
+bond  — одно из: [R] Романтика, [P] Платоника, [PL] Платоническая любовь, [F] Семья, [H] Вражда, [C] Сложные{{CUSTOM_BONDS_LIST}}
 
 ─── ПРАВИЛА ───
 1. cp — целое число от -100 до 100. Изменяй на ±1…5 за сообщение в зависимости от эмоционального воздействия.
@@ -102,11 +103,12 @@ bond  — одно из: [R] Романтика, [P] Платоника, [PL] П
 • [P] Платоника → [R] Романтика ТОЛЬКО при cp > 60.
 • [H] Вражда → [P] Платоника при cp > 0; → [R] Романтика при cp > 20 (из врагов в любовники).
 • [C] Сложные — переходное состояние. Старайся разрешить его в другой тип, когда есть достаточно данных.
-• [PL] Платоническая любовь — глубокая неромантическая привязанность; НЕ переходит автоматически в [R].
+• [PL] Платоническая любовь — глубокая неромантическая привязанность; НЕ переходит автоматически в [R].{{CUSTOM_BONDS_RULES}}
 
-─── МУЛЬТИПЕРСОНАЖИ ───
+─── МУЛЬТИПЕРСОНАЖИ И ФРАКЦИИ ───
 • Отслеживай ВСЕ пары, которые взаимодействуют, а не только Пользователь ↔ Персонаж.
 • Если два NPC-персонажа значимо взаимодействуют, добавь или обнови запись для их пары.
+• ФРАКЦИИ: Автоматически отслеживай отношения с Фракциями и Группами (например, 'Городская стража', 'Гильдия'), если они упоминаются. Относись к ним как к обычным персонажам.
 • Используй единый порядок имён (алфавитный по char_a), чтобы избежать дублей.
 
 ─── ЗНАЧИМЫЕ СОБЫТИЯ (MILESTONES) ───
@@ -138,7 +140,7 @@ bond  — одно из: [R] Романтика, [P] Платоника, [PL] П
 
 ─── ДОПУСТИМІ ЗНАЧЕННЯ ───
 tier  — одне з: Frozen, Cold, Distant, Neutral, Warm, Close, Devoted
-bond  — одне з: [R] Романтика, [P] Платоніка, [PL] Платонічне кохання, [F] Сім'я, [H] Ворожнеча, [C] Складні
+bond  — одне з: [R] Романтика, [P] Платоніка, [PL] Платонічне кохання, [F] Сім'я, [H] Ворожнеча, [C] Складні{{CUSTOM_BONDS_LIST}}
 
 ─── ПРАВИЛА ───
 1. cp — ціле число від -100 до 100. Змінюй на ±1…5 за повідомлення залежно від емоційного впливу.
@@ -151,11 +153,12 @@ bond  — одне з: [R] Романтика, [P] Платоніка, [PL] Пл
 • [P] Платоніка → [R] Романтика ТІЛЬКИ при cp > 60.
 • [H] Ворожнеча → [P] Платоніка при cp > 0; → [R] Романтика при cp > 20 (з ворогів у коханці).
 • [C] Складні — перехідний стан. Намагайся розв'язати його в інший тип, коли є достатньо даних.
-• [PL] Платонічне кохання — глибока неромантична відданість; НЕ переходить автоматично в [R].
+• [PL] Платонічне кохання — глибока неромантична відданість; НЕ переходит автоматически в [R].{{CUSTOM_BONDS_RULES}}
 
-─── МУЛЬТИПЕРСОНАЖІ ───
+─── МУЛЬТИПЕРСОНАЖІ ТА ФРАКЦІЇ ───
 • Відстежуй УСІ пари, що взаємодіють, а не лише Користувач ↔ Персонаж.
 • Якщо два NPC-персонажі значуще взаємодіють, додай або онови запис для їхньої пари.
+• ФРАКЦІЇ: Автоматично відстежуй стосунки з Фракціями та Групами (наприклад, 'Міська варта', 'Гільдія'), якщо вони згадуються. Стався до них як до звичайних персонажів.
 • Використовуй єдиний порядок імен (алфавітний за char_a), щоб уникнути дублів.
 
 ─── ЗНАЧУЩІ ПОДІЇ (MILESTONES) ───
@@ -165,3 +168,53 @@ bond  — одне з: [R] Романтика, [P] Платоніка, [PL] Пл
 ─── ВИВІД ───
 Поверни ТІЛЬКИ валідний JSON-масив. Без markdown-блоків, без коментарів, без пояснень.`,
 };
+
+export const resumePrompts = {
+    EN: `Based on the following JSON relationship data, write a natural language summary of the current relationship dynamics.
+Group the summary by character, creating a profile for each character that lists their connections and feelings towards others.
+{{LENGTH_INSTRUCTION}}
+Do not use numbers or tier names explicitly, just describe the feelings and dynamics. Write in the present tense.
+
+You MUST respond with a JSON array of objects, where each object represents a character's card.
+Example format:
+[
+  { "character": "Character Name", "summary": "Summary of their relationships..." }
+]
+Output ONLY valid JSON.
+
+JSON: {{RELATIONS_JSON}}`,
+
+    RU: `Основываясь на следующем JSON с данными об отношениях, напиши сводку на естественном языке, описывающую текущую динамику.
+Сгруппируй сводку по персонажам: создай "карточку" для каждого персонажа, где будет описано, как он относится к остальным, с кем взаимодействовал.
+{{LENGTH_INSTRUCTION}}
+Не упоминай конкретные числа или названия уровней, просто опиши суть и эмоции. Пиши в настоящем времени.
+
+Ты ДОЛЖЕН ответить JSON-массивом объектов, где каждый объект — это карточка персонажа.
+Пример формата:
+[
+  { "character": "Имя Персонажа", "summary": "Текст сводки его отношений..." }
+]
+Выводи ТОЛЬКО валидный JSON.
+
+JSON: {{RELATIONS_JSON}}`,
+
+    UK: `Грунтуючись на наступному JSON з даними про стосунки, напиши зведення природною мовою, що описує поточну динаміку.
+Згрупуй зведення за персонажами: створи "картку" для кожного персонажа, де буде описано, як він ставиться до інших.
+{{LENGTH_INSTRUCTION}}
+Не згадуй числа чи назви рівнів, просто опиши суть та емоції. Пиши в теперішньому часі.
+
+Ти ПОВИНЕН відповісти JSON-масивом об'єктів, де кожен об'єкт — це картка персонажа.
+Приклад формату:
+[
+  { "character": "Ім'я Персонажа", "summary": "Текст зведення його стосунків..." }
+]
+Виводь ТІЛЬКИ валідний JSON.
+
+JSON: {{RELATIONS_JSON}}`
+};
+
+export const customBondPrompt = `The user is creating a new custom relationship bond type named "{{BOND_NAME}}".
+{{HINT_SECTION}}
+Write THREE DIFFERENT 1-sentence instructions for an AI tracking relationships on how to identify this bond type in a chat and how it behaves.
+Make them distinct (e.g. one focused on mutual feelings, one on power dynamics, one on actions).
+Respond ONLY with a JSON array of 3 strings. Example: ["Option 1", "Option 2", "Option 3"]`;
