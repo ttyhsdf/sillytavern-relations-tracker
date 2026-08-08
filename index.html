@@ -67,12 +67,32 @@
                 <div class="rt-controls">
                     <button id="rt-add-btn" class="menu_button interactable"><i class="fa-solid fa-plus"></i> Add</button>
                     <button id="rt-refresh-btn" class="menu_button interactable"><i class="fa-solid fa-rotate-right"></i> Scan</button>
+                    <button id="rt-graph-btn" class="menu_button interactable"><i class="fa-solid fa-diagram-project"></i> Graph</button>
                     <button id="rt-export-btn" class="menu_button interactable"><i class="fa-solid fa-download"></i> Export</button>
                     <button id="rt-import-btn" class="menu_button interactable"><i class="fa-solid fa-upload"></i> Import</button>
                 </div>
                 <input type="file" id="rt-import-file" accept=".json" style="display: none;">
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Graph Popup -->
+<div id="rt-graph-popup" class="rt-graph-popup" style="display: none;">
+    <div class="rt-graph-header">
+        <span><i class="fa-solid fa-diagram-project"></i> Relationship Graph</span>
+        <div id="rt-graph-close" class="rt-graph-close fa-solid fa-xmark"></div>
+    </div>
+    <canvas id="rt-graph-canvas" width="600" height="400"></canvas>
+    <div id="rt-graph-tooltip" class="rt-graph-tooltip" style="display: none;"></div>
+</div>
+
+<!-- Floating Widget -->
+<div id="rt-float-widget" class="rt-float-widget" style="display: none;">
+    <div class="rt-float-icon"><i class="fa-solid fa-heart"></i></div>
+    <div class="rt-float-panel" style="display: none;">
+        <div class="rt-float-title">Relations</div>
+        <div id="rt-float-list" class="rt-float-list"></div>
     </div>
 </div>
 

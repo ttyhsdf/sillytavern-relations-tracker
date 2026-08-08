@@ -34,7 +34,8 @@ Each element in the array is an object:
   "cp": <integer -100…100>,
   "tier": "<tier>",
   "bond": "<bond>",
-  "label": "<2-4 word phrase>"
+  "label": "<2-4 word phrase>",
+  "milestone": { "event": "<significant event text>", "icon": "<icon>" } // Optional
 }
 
 ─── VALID VALUES ───
@@ -59,6 +60,10 @@ bond  — one of: [R] Romantic, [P] Platonic, [PL] Platonic Love, [F] Family, [H
 • If two non-user characters interact meaningfully, add or update their pair entry.
 • Use consistent name ordering (alphabetical by char_a) to avoid duplicates.
 
+─── MILESTONES ───
+• If a highly significant event occurred in this message (e.g. first meeting, first kiss, betrayal, saving a life), include a "milestone" object.
+• Icons allowed: 🏆, 💕, ⚔, 🤝, 💔, 🔥, ❄, 🌟, 😢, 🎉, 👑, 🗡, 🛡, 💀, 🌹
+
 ─── OUTPUT ───
 Return ONLY a valid JSON array. No markdown fences, no commentary, no explanation.`,
 
@@ -78,7 +83,8 @@ Return ONLY a valid JSON array. No markdown fences, no commentary, no explanatio
   "cp": <целое -100…100>,
   "tier": "<уровень>",
   "bond": "<тип связи>",
-  "label": "<фраза из 2-4 слов>"
+  "label": "<фраза из 2-4 слов>",
+  "milestone": { "event": "<текст значимого события>", "icon": "<иконка>" } // Опционально
 }
 
 ─── ДОПУСТИМЫЕ ЗНАЧЕНИЯ ───
@@ -103,6 +109,10 @@ bond  — одно из: [R] Романтика, [P] Платоника, [PL] П
 • Если два NPC-персонажа значимо взаимодействуют, добавь или обнови запись для их пары.
 • Используй единый порядок имён (алфавитный по char_a), чтобы избежать дублей.
 
+─── ЗНАЧИМЫЕ СОБЫТИЯ (MILESTONES) ───
+• Если в сообщении произошло важное событие (например, первая встреча, первый поцелуй, предательство, спасение жизни), добавь объект "milestone".
+• Допустимые иконки: 🏆, 💕, ⚔, 🤝, 💔, 🔥, ❄, 🌟, 😢, 🎉, 👑, 🗡, 🛡, 💀, 🌹
+
 ─── ВЫВОД ───
 Верни ТОЛЬКО валидный JSON-массив. Без markdown-блоков, без комментариев, без пояснений.`,
 
@@ -122,7 +132,8 @@ bond  — одно из: [R] Романтика, [P] Платоника, [PL] П
   "cp": <ціле -100…100>,
   "tier": "<рівень>",
   "bond": "<тип зв'язку>",
-  "label": "<фраза з 2-4 слів>"
+  "label": "<фраза з 2-4 слів>",
+  "milestone": { "event": "<текст значущої події>", "icon": "<іконка>" } // Опціонально
 }
 
 ─── ДОПУСТИМІ ЗНАЧЕННЯ ───
@@ -146,6 +157,10 @@ bond  — одне з: [R] Романтика, [P] Платоніка, [PL] Пл
 • Відстежуй УСІ пари, що взаємодіють, а не лише Користувач ↔ Персонаж.
 • Якщо два NPC-персонажі значуще взаємодіють, додай або онови запис для їхньої пари.
 • Використовуй єдиний порядок імен (алфавітний за char_a), щоб уникнути дублів.
+
+─── ЗНАЧУЩІ ПОДІЇ (MILESTONES) ───
+• Якщо в повідомленні відбулася важлива подія (наприклад, перша зустріч, перший поцілунок, зрада, порятунок життя), додай об'єкт "milestone".
+• Допустимі іконки: 🏆, 💕, ⚔, 🤝, 💔, 🔥, ❄, 🌟, 😢, 🎉, 👑, 🗡, 🛡, 💀, 🌹
 
 ─── ВИВІД ───
 Поверни ТІЛЬКИ валідний JSON-масив. Без markdown-блоків, без коментарів, без пояснень.`,

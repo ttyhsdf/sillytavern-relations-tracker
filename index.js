@@ -6,14 +6,19 @@ import { getTierFromCP, getTierLabel, getTierLabelsForBond } from "./tiers.js";
 import { ALL_BONDS, isTransitionAllowed, clampCP } from "./rules.js";
 import { createHistoryEntry, addHistoryEntry, getPairKey, renderHistoryHTML } from "./history.js";
 import { smartScan, fullScan } from "./scanner.js";
+import { checkInteraction, calculateDecay } from "./decay.js";
+import { addMilestone, getMilestones, renderMilestonesHTML, createMilestoneFromAI } from "./milestones.js";
+import { RelationGraph } from "./graph.js";
 
 const extensionName = "sillytavern-relations-tracker";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 
 let relationsData = [];
 let historyMap = {};
+let milestonesMap = {};
 let pendingChanges = null;
 let isGenerating = false;
+let graphInstance = null;
 
 const defaultSettings = {
     mode: 'auto',
@@ -23,7 +28,9 @@ const defaultSettings = {
     connectionProfile: '',
     debug: false,
     relations: {},
-    history: {}
+    history: {},
+    milestones: {},
+    enableDecay: true
 };
 
 // =====================
@@ -66,7 +73,13 @@ function loadRelationsFromSettings() {
     } else {
         historyMap = {};
     }
+    if (chatKey && settings.milestones?.[chatKey]) {
+        milestonesMap = JSON.parse(JSON.stringify(settings.milestones[chatKey]));
+    } else {
+        milestonesMap = {};
+    }
     renderCards();
+    updateFloatingWidget();
 }
 
 function saveSettings() {
@@ -80,7 +93,9 @@ function saveSettings() {
         connectionProfile: $('#rt-connection-profile').val(),
         debug: $('#rt-debug').prop('checked'),
         relations: current.relations || {},
-        history: current.history || {}
+        history: current.history || {},
+        milestones: current.milestones || {},
+        enableDecay: current.enableDecay !== undefined ? current.enableDecay : true
     };
     saveSettingsDebounced();
 }
@@ -91,9 +106,12 @@ function saveRelations() {
     if (!extension_settings[extensionName]) extension_settings[extensionName] = Object.assign({}, defaultSettings);
     if (!extension_settings[extensionName].relations) extension_settings[extensionName].relations = {};
     if (!extension_settings[extensionName].history) extension_settings[extensionName].history = {};
+    if (!extension_settings[extensionName].milestones) extension_settings[extensionName].milestones = {};
     extension_settings[extensionName].relations[chatKey] = JSON.parse(JSON.stringify(relationsData));
     extension_settings[extensionName].history[chatKey] = JSON.parse(JSON.stringify(historyMap));
+    extension_settings[extensionName].milestones[chatKey] = JSON.parse(JSON.stringify(milestonesMap));
     saveSettingsDebounced();
+    updateFloatingWidget();
 }
 
 function loadConnectionProfiles() {
@@ -154,13 +172,45 @@ function buildRelationsTag() {
 function scanChatForRelations() {
     const context = getContext();
     if (!context?.chat?.length) return;
+    const settings = getSettings();
+    const currentMsgCount = context.chat.length;
+
     for (let i = context.chat.length - 1; i >= 0; i--) {
         const msg = context.chat[i].mes;
         if (!msg) continue;
         const parsed = parseRelationsTag(msg);
         if (parsed) {
             relationsData = parsed;
+            
+            if (settings.enableDecay) {
+                let changed = false;
+                for (const rel of relationsData) {
+                    if (rel.lastInteractionMsg === undefined) {
+                        rel.lastInteractionMsg = checkInteraction(context.chat, rel.source, rel.target, 0);
+                        changed = true;
+                    } else {
+                        const newInteraction = checkInteraction(context.chat, rel.source, rel.target, rel.lastInteractionMsg);
+                        if (newInteraction > rel.lastInteractionMsg) {
+                            rel.lastInteractionMsg = newInteraction;
+                            changed = true;
+                        }
+                    }
+                    
+                    const decayedCp = calculateDecay(rel, currentMsgCount);
+                    if (decayedCp !== rel.cp && !rel.locked) {
+                        rel.cp = decayedCp;
+                        rel.tier = getTierFromCP(rel.cp);
+                        changed = true;
+                    }
+                }
+                if (changed) {
+                    injectIntoPrompt();
+                    saveRelations();
+                }
+            }
+
             renderCards();
+            updateFloatingWidget();
             injectIntoPrompt();
             saveRelations();
             return;
@@ -287,16 +337,31 @@ async function runAIAnalysis() {
 
 function applyChanges(newRelations, msgIndex) {
     let changeSummary = [];
+    const context = getContext();
     for (const newRel of newRelations) {
+        const pairKey = getPairKey(newRel.source, newRel.target);
+        
+        if (newRel.milestone && newRel.milestone.event) {
+            const ms = createMilestoneFromAI(newRel.milestone, msgIndex);
+            addMilestone(milestonesMap, pairKey, ms);
+            changeSummary.push(`🏆 Milestone for ${newRel.source}→${newRel.target}`);
+        }
+        delete newRel.milestone;
+
+        newRel.lastInteractionMsg = checkInteraction(context?.chat || [], newRel.source, newRel.target, Math.max(0, msgIndex - 10));
+
         const oldRel = relationsData.find(r => r.source === newRel.source && r.target === newRel.target);
         if (oldRel) {
             const entry = createHistoryEntry(oldRel, newRel, msgIndex);
             if (entry) {
-                addHistoryEntry(historyMap, getPairKey(newRel.source, newRel.target), entry);
+                addHistoryEntry(historyMap, pairKey, entry);
                 const diff = newRel.cp - oldRel.cp;
                 if (diff !== 0) changeSummary.push(`${newRel.source} (${diff > 0 ? '+' : ''}${diff} CP)`);
             }
             newRel.locked = oldRel.locked || false;
+            if (newRel.lastInteractionMsg === undefined) {
+                newRel.lastInteractionMsg = oldRel.lastInteractionMsg;
+            }
         } else {
             // New relationship pair detected by AI
             newRel.locked = false;
@@ -444,7 +509,18 @@ function renderCards() {
         // History panel
         const pairKey = getPairKey(rel.source, rel.target);
         const historyContent = card.querySelector('.rt-history-content');
-        if (historyContent) historyContent.innerHTML = renderHistoryHTML(historyMap[pairKey] || []);
+        if (historyContent) {
+            const historyHtml = renderHistoryHTML(historyMap[pairKey] || []);
+            const milestonesList = getMilestones(milestonesMap, pairKey);
+            const milestonesHtml = renderMilestonesHTML(milestonesList);
+            
+            let combinedHtml = '';
+            if (milestonesList && milestonesList.length > 0) {
+                combinedHtml += milestonesHtml + '<hr style="border-color: rgba(255,255,255,0.1); margin: 6px 0;">';
+            }
+            combinedHtml += historyHtml;
+            historyContent.innerHTML = combinedHtml;
+        }
 
         const histToggle = card.querySelector('.rt-history-toggle');
         const histPanel = card.querySelector('.rt-history-panel');
@@ -578,6 +654,37 @@ function importRelations(file) {
     reader.readAsText(file);
 }
 
+function updateFloatingWidget() {
+    const list = document.getElementById('rt-float-list');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    if (relationsData.length === 0) {
+        list.innerHTML = '<div style="font-size:0.8em; color:gray;">No relations</div>';
+        return;
+    }
+    
+    relationsData.forEach((rel, index) => {
+        const item = document.createElement('div');
+        item.className = 'rt-float-item';
+        item.innerHTML = `
+            <div class="rt-float-pair">${rel.source} &rarr; ${rel.target}</div>
+            <div class="rt-float-status" style="color:${getBondColor(rel.bond)}">
+                <span>${rel.bond}</span> <span>${rel.cp}</span>
+            </div>
+        `;
+        item.addEventListener('click', () => {
+            const card = document.querySelector(`.rt-card[data-index="${index}"]`);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                card.style.boxShadow = `0 0 15px ${getBondColor(rel.bond)}`;
+                setTimeout(() => card.style.boxShadow = '', 1500);
+            }
+        });
+        list.appendChild(item);
+    });
+}
+
 // =====================
 // Init
 // =====================
@@ -620,6 +727,32 @@ async function initUI() {
         document.getElementById('rt-hybrid-dismiss').addEventListener('click', () => {
             hideHybridBanner();
             if (typeof toastr !== "undefined") toastr.info("Dismissed.", "RT");
+        });
+
+        // Widget logic
+        const widgetIcon = document.querySelector('.rt-float-icon');
+        const widgetPanel = document.querySelector('.rt-float-panel');
+        if (widgetIcon && widgetPanel) {
+            widgetIcon.addEventListener('mouseenter', () => widgetPanel.style.display = 'block');
+            document.getElementById('rt-float-widget').addEventListener('mouseleave', () => widgetPanel.style.display = 'none');
+            document.getElementById('rt-float-widget').style.display = 'flex';
+        }
+        
+        // Graph logic
+        document.getElementById('rt-graph-btn').addEventListener('click', () => {
+            const popup = document.getElementById('rt-graph-popup');
+            if (popup) {
+                popup.style.display = 'flex';
+                if (graphInstance) graphInstance.destroy();
+                const canvas = document.getElementById('rt-graph-canvas');
+                graphInstance = new RelationGraph(canvas, relationsData);
+                graphInstance.init();
+            }
+        });
+        document.getElementById('rt-graph-close').addEventListener('click', () => {
+            const popup = document.getElementById('rt-graph-popup');
+            if (popup) popup.style.display = 'none';
+            if (graphInstance) graphInstance.destroy();
         });
 
     } catch (error) {
