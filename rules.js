@@ -1,52 +1,139 @@
-// Relationship Rules & Constraints
+/**
+ * @file rules.js
+ * @description Bond type rules, constraints, and transition logic for the Relations Tracker extension.
+ */
 
-export const BOND_TYPES = {
-    '[R]': 'Romantic',
-    '[PL]': 'Platonic Love',
-    '[P]': 'Platonic',
-    '[F]': 'Family',
-    '[H]': 'Hostile',
-    '[C]': 'Complicated'
+/** All recognized bond types with display metadata. */
+export const ALL_BONDS = [
+    { code: '[R]',  name: 'Romantic',       emoji: '💋' },
+    { code: '[P]',  name: 'Platonic',       emoji: '🤝' },
+    { code: '[PL]', name: 'Platonic Love',  emoji: '💛' },
+    { code: '[F]',  name: 'Family',         emoji: '🏠' },
+    { code: '[H]',  name: 'Hostile',        emoji: '⚔' },
+    { code: '[C]',  name: 'Complicated',    emoji: '🌀' },
+];
+
+/**
+ * Rules governing each bond type.
+ *
+ * - cpCap:                 Maximum CP value (null = uncapped).
+ * - blockedTransitions:    Bond types this can NEVER transition to.
+ * - allowedTransitions:    Bond types this CAN transition to (when conditions are met).
+ * - transitionConditions:  Map of target bond → condition function `(cp) => boolean`.
+ *                          `true` means the transition is always conditionally valid.
+ */
+export const BOND_RULES = {
+    '[F]': {
+        cpCap: 70,
+        blockedTransitions: ['[R]'],
+        allowedTransitions: ['[H]', '[C]'],
+        transitionConditions: {
+            '[H]': (cp) => cp < -30,
+            '[C]': () => true,
+        },
+    },
+
+    '[P]': {
+        cpCap: null,
+        blockedTransitions: [],
+        allowedTransitions: ['[R]', '[PL]', '[H]', '[C]'],
+        transitionConditions: {
+            '[R]':  (cp) => cp > 60,
+            '[PL]': (cp) => cp > 50,
+            '[H]':  (cp) => cp < -30,
+            '[C]':  () => true,
+        },
+    },
+
+    '[PL]': {
+        cpCap: null,
+        blockedTransitions: ['[R]'],
+        allowedTransitions: ['[P]', '[C]'],
+        transitionConditions: {
+            '[C]': () => true,
+            '[P]': (cp) => cp < 30,
+        },
+    },
+
+    '[R]': {
+        cpCap: null,
+        blockedTransitions: [],
+        allowedTransitions: ['[P]', '[H]', '[C]'],
+        transitionConditions: {
+            '[P]': (cp) => cp < 30,
+            '[H]': (cp) => cp < -20,
+            '[C]': () => true,
+        },
+    },
+
+    '[H]': {
+        cpCap: null,
+        blockedTransitions: [],
+        allowedTransitions: ['[P]', '[R]', '[C]'],
+        transitionConditions: {
+            '[P]': (cp) => cp > 0,
+            '[R]': (cp) => cp > 20,
+            '[C]': () => true,
+        },
+    },
+
+    '[C]': {
+        cpCap: null,
+        blockedTransitions: [],
+        allowedTransitions: ['[R]', '[P]', '[PL]', '[F]', '[H]'],
+        transitionConditions: {
+            '[R]':  () => true,
+            '[P]':  () => true,
+            '[PL]': () => true,
+            '[F]':  () => true,
+            '[H]':  () => true,
+        },
+    },
 };
 
-export const VALID_BONDS = Object.keys(BOND_TYPES);
+/**
+ * Retrieves the rule object for a given bond type.
+ * @param {string} bond - Bond type code, e.g. '[R]'.
+ * @returns {object|undefined} The rule entry, or undefined if the bond is unknown.
+ */
+export function getRule(bond) {
+    return BOND_RULES[bond];
+}
 
-export function enforceRules(rel, oldRel = null) {
-    // 1. Hard caps
-    if (rel.bond === '[F]') {
-        // Family cannot exceed 70 CP (Close/Warm, but not Devoted romantically)
-        rel.cp = Math.min(rel.cp, 70);
-    }
+/**
+ * Checks whether a transition between two bond types is allowed and
+ * whether the current CP satisfies the transition condition.
+ * @param {string} fromBond - Current bond type code.
+ * @param {string} toBond   - Target bond type code.
+ * @param {number} cp       - Current connection points value.
+ * @returns {boolean} True if the transition is permitted and conditions are met.
+ */
+export function isTransitionAllowed(fromBond, toBond, cp) {
+    const rule = BOND_RULES[fromBond];
+    if (!rule) return false;
 
-    // 2. Transition rules (if we have an old state)
-    if (oldRel && oldRel.bond !== rel.bond) {
-        
-        // Family can never directly become Romantic
-        if (oldRel.bond === '[F]' && rel.bond === '[R]') {
-            rel.bond = '[F]'; // block transition
-        }
-        
-        // Platonic Love cannot directly become Romantic (needs Complicated or Platonic step)
-        if (oldRel.bond === '[PL]' && rel.bond === '[R]') {
-            rel.bond = '[C]'; // Force into complicated instead
-        }
-        
-        // Natural transition logic validation based on CP
-        if (oldRel.bond === '[P]' && rel.bond === '[R]') {
-            if (rel.cp < 40) {
-                rel.bond = '[C]'; // Not high enough CP for pure romance yet
-            }
-        }
-        
-        if (oldRel.bond === '[H]' && rel.bond === '[R]') {
-            if (rel.cp < 20) {
-                rel.bond = '[C]'; // Enemies to lovers needs some positive CP first
-            }
-        }
-    }
+    // Explicitly blocked transitions are never allowed
+    if (rule.blockedTransitions.includes(toBond)) return false;
 
-    // Fallback clamps
-    rel.cp = Math.max(-100, Math.min(100, parseInt(rel.cp) || 0));
-    
-    return rel;
+    // Must be in the allowed list
+    if (!rule.allowedTransitions.includes(toBond)) return false;
+
+    // Evaluate the CP-based condition (default to false if missing)
+    const condition = rule.transitionConditions[toBond];
+    if (!condition) return false;
+
+    return typeof condition === 'function' ? condition(cp) : !!condition;
+}
+
+/**
+ * Clamps a CP value to the bond type's maximum cap.
+ * If the bond has no cap (cpCap is null), the value is returned as-is.
+ * @param {string} bond - Bond type code.
+ * @param {number} cp   - Raw connection points value.
+ * @returns {number} The clamped CP value.
+ */
+export function clampCP(bond, cp) {
+    const rule = BOND_RULES[bond];
+    if (!rule || rule.cpCap === null) return cp;
+    return Math.min(cp, rule.cpCap);
 }

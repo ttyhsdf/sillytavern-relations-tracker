@@ -1,47 +1,72 @@
-// Auto-Tier Sync: Maps CP ranges to Contextual Tier values automatically
+/**
+ * @module tiers
+ * @description Context-dependent tier names that change based on bond type.
+ * Provides universal CP-range → tier mapping and per-bond-type display labels.
+ */
 
-export const TIER_THRESHOLDS = [
-    { min: -100, max: -70, default: 'Frozen' },
-    { min: -69,  max: -40, default: 'Cold' },
-    { min: -39,  max: -10, default: 'Distant' },
-    { min: -9,   max: 9,   default: 'Neutral' },
-    { min: 10,   max: 39,  default: 'Warm' },
-    { min: 40,   max: 69,  default: 'Close' },
-    { min: 70,   max: 100, default: 'Devoted' }
+/** Internal tier value names used for persistence. */
+export const TIER_VALUES = [
+    'Frozen',   // 0  (-100 .. -70)
+    'Cold',     // 1  ( -69 .. -40)
+    'Distant',  // 2  ( -39 .. -10)
+    'Neutral',  // 3  (  -9 ..  +9)
+    'Warm',     // 4  ( +10 .. +39)
+    'Close',    // 5  ( +40 .. +69)
+    'Devoted',  // 6  ( +70 .. +100)
 ];
 
-export const VALID_TIERS = ['Frozen', 'Cold', 'Distant', 'Neutral', 'Warm', 'Close', 'Devoted'];
-
-export const CONTEXTUAL_TIERS = {
-    '[R]': ['💔 Heartbroken', '😢 Bitter', '😕 Awkward', '😐 Neutral', '😊 Interested', '😍 Infatuated', '💕 Deeply in love'],
-    '[P]': ['🧊 Frozen', '❄ Cold', '🌫 Distant', '⚖ Neutral', '☀ Warm', '🔥 Close', '💎 Soulmates'],
-    '[PL]': ['🧊 Severed', '❄ Broken', '🌫 Drifting', '⚖ Neutral', '☀ Caring', '🔥 Inseparable', '💎 Bound souls'],
-    '[F]': ['💔 Disowned', '😤 Resentful', '😶 Estranged', '⚖ Neutral', '🤗 Caring', '❤ Loving', '🏡 Unbreakable'],
-    '[H]': ['🩸 Blood feud', '⚔ Sworn enemies', '😠 Hostile', '😐 Wary', '🤔 Grudging respect', '🤝 Frenemies', '✨ Redeemed'],
-    '[C]': ['🌪 Chaotic', '⛈ Stormy', '🌧 Tense', '⚖ Uncertain', '🌤 Hopeful', '⛅ Mixed signals', '🔥 Intensely complicated']
+/** Display labels (with emoji) for each tier, keyed by bond type. */
+export const TIER_LABELS = {
+    '[R]': ['💔 Heartbroken', '😢 Bitter',     '😕 Awkward',   '😐 Neutral',   '😊 Interested',      '😍 Infatuated',  '💕 Deeply in love'],
+    '[P]': ['🧊 Frozen',      '❄ Cold',        '🌫 Distant',   '⚖ Neutral',    '☀ Warm',             '🔥 Close',       '💎 Soulmates'],
+    '[PL]': ['💔 Broken bond', '😢 Hurt',       '🌫 Distant',   '⚖ Neutral',    '☀ Warm',             '💛 Deep bond',   '✨ Inseparable'],
+    '[F]': ['💔 Disowned',    '😤 Resentful',   '😶 Estranged',  '⚖ Neutral',    '🤗 Caring',          '❤ Loving',       '🏡 Unbreakable'],
+    '[H]': ['🩸 Blood feud',  '⚔ Sworn enemies','😠 Hostile',    '😐 Wary',      '🤔 Grudging respect', '🤝 Frenemies',   '🕊 Former enemies'],
+    '[C]': ['😰 Tormented',   '😓 Conflicted',  '😕 Uneasy',    '🌀 Undefined', '🤔 Curious',         '😶\u200D🌫 Drawn to', '❓ Obsessed'],
 };
 
-export function getTierFromCP(cp, bond = '[P]') {
-    let index = 3; // Default Neutral
-    for (let i = 0; i < TIER_THRESHOLDS.length; i++) {
-        const t = TIER_THRESHOLDS[i];
-        if (cp >= t.min && cp <= t.max) {
-            index = i;
-            break;
-        }
-    }
-    
-    // Return contextual label based on bond type
-    if (CONTEXTUAL_TIERS[bond] && CONTEXTUAL_TIERS[bond][index]) {
-        return CONTEXTUAL_TIERS[bond][index];
-    }
-    
-    return TIER_THRESHOLDS[index].default;
+/**
+ * Maps a CP value (-100 … +100) to a tier index (0–6).
+ * @param {number} cp - Connection points value, clamped to [-100, 100].
+ * @returns {number} Tier index between 0 and 6.
+ */
+export function getTierIndex(cp) {
+    if (cp <= -70) return 0;
+    if (cp <= -40) return 1;
+    if (cp <= -10) return 2;
+    if (cp <=   9) return 3;
+    if (cp <=  39) return 4;
+    if (cp <=  69) return 5;
+    return 6;
 }
 
-export function getCPRangeForTierIndex(index) {
-    if (index >= 0 && index < TIER_THRESHOLDS.length) {
-        return { min: TIER_THRESHOLDS[index].min, max: TIER_THRESHOLDS[index].max };
-    }
-    return { min: -9, max: 9 };
+/**
+ * Returns the internal tier value string for a given CP.
+ * @param {number} cp - Connection points value.
+ * @returns {string} One of the TIER_VALUES entries (e.g. 'Warm').
+ */
+export function getTierFromCP(cp) {
+    return TIER_VALUES[getTierIndex(cp)];
+}
+
+/**
+ * Returns the display label (with emoji) for a given CP and bond type.
+ * Falls back to the '[P]' (platonic) labels if the bond type is unknown.
+ * @param {number} cp   - Connection points value.
+ * @param {string} bond - Bond type key, e.g. '[R]', '[P]', '[F]'.
+ * @returns {string} The emoji-prefixed tier label.
+ */
+export function getTierLabel(cp, bond) {
+    const labels = TIER_LABELS[bond] || TIER_LABELS['[P]'];
+    return labels[getTierIndex(cp)];
+}
+
+/**
+ * Returns the full array of 7 tier labels for a bond type.
+ * Falls back to '[P]' labels if the bond type is unknown.
+ * @param {string} bond - Bond type key.
+ * @returns {string[]} Array of 7 display labels.
+ */
+export function getTierLabelsForBond(bond) {
+    return TIER_LABELS[bond] || TIER_LABELS['[P]'];
 }

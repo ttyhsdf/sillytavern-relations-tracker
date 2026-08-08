@@ -5,58 +5,50 @@
             <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
         </div>
         <div class="inline-drawer-content" style="display: none;">
-            
             <div class="rt-body">
-                <!-- Settings Section -->
+                <!-- Settings -->
                 <div class="inline-drawer">
                     <div class="inline-drawer-toggle inline-drawer-header">
                         <b><i class="fa-solid fa-gear" style="margin-right: 5px;"></i> Settings</b>
                         <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
                     </div>
                     <div class="inline-drawer-content rt-settings-section" style="display: none;">
-                        <!-- Mode Selection -->
-                        <label style="margin-bottom: 4px; font-weight: 600; font-size: 0.85em; color: var(--grey50);">AI MODE</label>
+                        <label style="margin-bottom: 2px; font-weight: 600; font-size: 0.8em; color: var(--grey50);">AI MODE</label>
                         <div class="rt-mode-toggle">
-                            <button class="menu_button rt-mode-btn" data-mode="manual" title="All changes are manual">Manual</button>
-                            <button class="menu_button rt-mode-btn active" data-mode="auto" title="AI evaluates and applies changes automatically">Auto</button>
-                            <button class="menu_button rt-mode-btn" data-mode="hybrid" title="AI suggests changes, you confirm or dismiss">Hybrid</button>
+                            <button class="menu_button rt-mode-btn" data-mode="manual">Manual</button>
+                            <button class="menu_button rt-mode-btn active" data-mode="auto">Auto</button>
+                            <button class="menu_button rt-mode-btn" data-mode="hybrid">Hybrid</button>
                         </div>
-
-                        <div class="rt-row" style="margin-top: 8px;">
+                        <div class="rt-row" style="margin-top: 6px;">
                             <label><input type="checkbox" id="rt-smart-scan" checked /> Smart Scan</label>
+                            <label><input type="checkbox" id="rt-debug" /> Debug</label>
                         </div>
-                        
                         <div class="rt-row" style="margin-top: 5px;">
                             <div class="rt-field-group flex1">
-                                <label>Context Depth</label>
+                                <label>Depth</label>
                                 <input type="number" class="text_pole" id="rt-scan-depth" value="10" min="1" max="100">
                             </div>
                             <div class="rt-field-group flex1">
-                                <label>Prompt Language</label>
+                                <label>Language</label>
                                 <select id="rt-prompt-lang" class="text_pole">
-                                    <option value="EN">English</option>
-                                    <option value="RU">Russian</option>
-                                    <option value="UK">Ukrainian</option>
+                                    <option value="EN">EN</option>
+                                    <option value="RU">RU</option>
+                                    <option value="UK">UK</option>
                                 </select>
                             </div>
                         </div>
-                        
                         <div class="rt-row" style="margin-top: 5px;">
                             <div class="rt-field-group" style="width: 100%;">
                                 <label>Connection Profile</label>
                                 <select id="rt-connection-profile" class="text_pole">
-                                    <option value="">-- Use Main API --</option>
+                                    <option value="">-- Main API --</option>
                                 </select>
                             </div>
-                        </div>
-
-                        <div class="rt-row" style="margin-top: 5px;">
-                            <label><input type="checkbox" id="rt-debug" /> Debug Mode</label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Hybrid Mode Pending Banner (hidden by default) -->
+                <!-- Hybrid Banner -->
                 <div id="rt-hybrid-banner" class="rt-hybrid-banner" style="display: none;">
                     <div class="rt-hybrid-title"><i class="fa-solid fa-robot"></i> AI Suggestion</div>
                     <div id="rt-hybrid-summary" class="rt-hybrid-summary"></div>
@@ -66,29 +58,20 @@
                     </div>
                 </div>
 
-                <!-- Cards Container -->
+                <!-- Cards -->
                 <div id="rt-cards-container" class="rt-cards-container">
-                    <div class="rt-empty-state">No relationship data. Open a chat and click "Add" or "Scan Chat".</div>
+                    <div class="rt-empty-state">No relationships. Click "Add" or "Scan".</div>
                 </div>
-                
+
                 <!-- Bottom Controls -->
                 <div class="rt-controls">
-                    <button id="rt-add-btn" class="menu_button interactable" style="flex: 1;">
-                        <i class="fa-solid fa-plus"></i> Add
-                    </button>
-                    <button id="rt-refresh-btn" class="menu_button interactable" style="flex: 1;">
-                        <i class="fa-solid fa-rotate-right"></i> Scan
-                    </button>
-                    <button id="rt-export-btn" class="menu_button interactable" style="flex: 1;">
-                        <i class="fa-solid fa-download"></i> Export
-                    </button>
-                    <button id="rt-import-btn" class="menu_button interactable" style="flex: 1;">
-                        <i class="fa-solid fa-upload"></i> Import
-                    </button>
+                    <button id="rt-add-btn" class="menu_button interactable"><i class="fa-solid fa-plus"></i> Add</button>
+                    <button id="rt-refresh-btn" class="menu_button interactable"><i class="fa-solid fa-rotate-right"></i> Scan</button>
+                    <button id="rt-export-btn" class="menu_button interactable"><i class="fa-solid fa-download"></i> Export</button>
+                    <button id="rt-import-btn" class="menu_button interactable"><i class="fa-solid fa-upload"></i> Import</button>
                 </div>
                 <input type="file" id="rt-import-file" accept=".json" style="display: none;">
             </div>
-
         </div>
     </div>
 </div>
@@ -97,78 +80,71 @@
     <div class="rt-card">
         <div class="rt-card-header">
             <div class="rt-names">
-                <span class="rt-source" contenteditable="true" data-field="source" title="Click to edit">Name</span>
-                <i class="fa-solid fa-arrow-right"></i>
-                <span class="rt-target" contenteditable="true" data-field="target" title="Click to edit">Target</span>
-                <span class="rt-bond-label" data-bond="[P]"></span>
+                <span class="rt-source" contenteditable="true" title="Click to edit">Name</span>
+                <i class="fa-solid fa-arrow-right rt-arrow"></i>
+                <span class="rt-target" contenteditable="true" title="Click to edit">Target</span>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <div class="rt-history-toggle fa-solid fa-clock-rotate-left" title="Show history"></div>
+            <div class="rt-card-actions">
+                <span class="rt-bond-label" data-bond="[P]"></span>
+                <label class="rt-lock-label" title="Lock: AI cannot change bond type"><input type="checkbox" class="rt-lock" /> <i class="fa-solid fa-lock"></i></label>
+                <div class="rt-history-toggle fa-solid fa-clock-rotate-left" title="History"></div>
                 <div class="rt-delete-btn fa-solid fa-trash" title="Delete"></div>
             </div>
         </div>
-        
-        <!-- History Log (collapsed by default) -->
+
         <div class="rt-history-panel" style="display: none;">
-            <div class="rt-history-content">
-                <div class="rt-history-empty">No changes recorded yet.</div>
-            </div>
+            <div class="rt-history-content"><div class="rt-history-empty">No history yet.</div></div>
         </div>
 
         <div class="rt-card-body">
             <div class="rt-row flex-container">
                 <div class="rt-field-group flex1">
-                    <label>Bond Type</label>
-                    <select class="text_pole rt-bond-type" data-field="bond">
+                    <label>Bond</label>
+                    <select class="text_pole rt-bond-type">
                         <option value="[R]">💋 Romantic</option>
-                        <option value="[PL]">💛 Platonic Love</option>
                         <option value="[P]">🤝 Platonic</option>
+                        <option value="[PL]">💛 Platonic Love</option>
                         <option value="[F]">🏠 Family</option>
-                        <option value="[C]">🌀 Complicated</option>
                         <option value="[H]">⚔ Hostile</option>
+                        <option value="[C]">🌀 Complicated</option>
                     </select>
                 </div>
-                
                 <div class="rt-field-group flex1">
                     <label>Tier</label>
-                    <select class="text_pole rt-tier" data-field="tier">
-                        <!-- Options generated dynamically by tiers.js -->
+                    <select class="text_pole rt-tier">
+                        <!-- Populated dynamically -->
                     </select>
                 </div>
             </div>
-            
+
             <div class="rt-row">
                 <div class="rt-field-group" style="width: 100%;">
                     <label>Label</label>
                     <div class="rt-label-wrapper">
-                        <input type="text" class="text_pole rt-label" data-field="label" placeholder="How they feel about each other...">
-                        <select class="rt-label-presets" title="Quick-fill label from presets">
-                            <option value="">✦ Presets...</option>
+                        <input type="text" class="text_pole rt-label" placeholder="How they feel...">
+                        <select class="rt-label-presets" title="Presets">
+                            <option value="">✦</option>
                             <optgroup label="Romantic">
                                 <option value="Strangers with tension">Strangers with tension</option>
                                 <option value="Flirting stage">Flirting stage</option>
                                 <option value="Mutual crush">Mutual crush</option>
-                                <option value="Dating">Dating</option>
                                 <option value="Deeply in love">Deeply in love</option>
                             </optgroup>
                             <optgroup label="Platonic">
                                 <option value="Just met">Just met</option>
                                 <option value="Acquaintances">Acquaintances</option>
-                                <option value="Wary allies">Wary allies</option>
                                 <option value="Good friends">Good friends</option>
                                 <option value="Best friends">Best friends</option>
                             </optgroup>
                             <optgroup label="Family">
                                 <option value="Estranged">Estranged</option>
-                                <option value="Distant relatives">Distant relatives</option>
                                 <option value="Family bond">Family bond</option>
                                 <option value="Protective bond">Protective bond</option>
-                                <option value="Unbreakable bond">Unbreakable bond</option>
+                                <option value="Unbreakable">Unbreakable</option>
                             </optgroup>
                             <optgroup label="Hostile">
                                 <option value="Mild annoyance">Mild annoyance</option>
                                 <option value="Rivals">Rivals</option>
-                                <option value="Open conflict">Open conflict</option>
                                 <option value="Sworn enemies">Sworn enemies</option>
                                 <option value="Blood feud">Blood feud</option>
                             </optgroup>
@@ -176,14 +152,14 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="rt-row">
                 <div class="rt-field-group" style="width: 100%;">
                     <div class="rt-cp-display">
-                        <label>Charm Points (CP)</label>
+                        <label>CP</label>
                         <span class="rt-cp-value">0</span>
                     </div>
-                    <input type="range" min="-100" max="100" value="0" class="rt-cp-slider" data-field="cp">
+                    <input type="range" min="-100" max="100" value="0" class="rt-cp-slider">
                 </div>
             </div>
         </div>
