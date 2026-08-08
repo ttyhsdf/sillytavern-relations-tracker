@@ -23,7 +23,6 @@
                         </div>
 
                         <div class="rt-row" style="margin-top: 8px;">
-                            <label><input type="checkbox" id="rt-auto-tier" checked /> Auto-Tier Sync (CP drives Tier)</label>
                             <label><input type="checkbox" id="rt-smart-scan" checked /> Smart Scan</label>
                         </div>
                         
@@ -121,9 +120,11 @@
                 <div class="rt-field-group flex1">
                     <label>Bond Type</label>
                     <select class="text_pole rt-bond-type" data-field="bond">
-                        <option value="[R]">❤ Romantic</option>
+                        <option value="[R]">💋 Romantic</option>
+                        <option value="[PL]">💛 Platonic Love</option>
                         <option value="[P]">🤝 Platonic</option>
                         <option value="[F]">🏠 Family</option>
+                        <option value="[C]">🌀 Complicated</option>
                         <option value="[H]">⚔ Hostile</option>
                     </select>
                 </div>
@@ -131,13 +132,7 @@
                 <div class="rt-field-group flex1">
                     <label>Tier</label>
                     <select class="text_pole rt-tier" data-field="tier">
-                        <option value="Frozen">🧊 Frozen</option>
-                        <option value="Cold">❄ Cold</option>
-                        <option value="Distant">🌫 Distant</option>
-                        <option value="Neutral" selected>⚖ Neutral</option>
-                        <option value="Warm">☀ Warm</option>
-                        <option value="Close">🔥 Close</option>
-                        <option value="Devoted">💎 Devoted</option>
+                        <!-- Options generated dynamically by tiers.js -->
                     </select>
                 </div>
             </div>

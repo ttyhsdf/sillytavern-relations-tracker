@@ -1,7 +1,10 @@
 import { extension_settings, getContext } from "../../../extensions.js";
 import { eventSource, event_types, generateRaw, saveSettingsDebounced, setExtensionPrompt } from "../../../../script.js";
-import { systemPrompts, VALID_TIERS, VALID_BONDS } from "./prompts.js";
-import { getTierFromCP } from "./tiers.js";
+import { systemPrompts, VALID_BONDS } from "./prompts.js";
+import { getTierFromCP, VALID_TIERS, CONTEXTUAL_TIERS } from "./tiers.js";
+import { enforceRules } from "./rules.js";
+import { createHistoryEntry, addHistoryEntry, getPairKey, renderHistoryHTML } from "./history.js";
+import { smartScan, fullScan } from "./scanner.js";
 import { createHistoryEntry, addHistoryEntry, getPairKey, renderHistoryHTML } from "./history.js";
 import { smartScan, fullScan } from "./scanner.js";
 
@@ -15,14 +18,15 @@ let isGenerating = false;
 
 const BOND_LABELS = {
     '[R]': 'Romantic',
+    '[PL]': 'Platonic Love',
     '[P]': 'Platonic',
     '[F]': 'Family',
+    '[C]': 'Complicated',
     '[H]': 'Hostile'
 };
 
 const defaultSettings = {
     mode: 'auto',       // 'manual' | 'auto' | 'hybrid'
-    autoTierSync: true,
     smartScan: true,
     scanDepth: 10,
     promptLang: 'EN',
@@ -49,7 +53,6 @@ function loadSettings() {
     
     $('.rt-mode-btn').removeClass('active');
     $(`.rt-mode-btn[data-mode="${settings.mode}"]`).addClass('active');
-    $('#rt-auto-tier').prop('checked', settings.autoTierSync);
     $('#rt-smart-scan').prop('checked', settings.smartScan);
     $('#rt-scan-depth').val(settings.scanDepth);
     $('#rt-prompt-lang').val(settings.promptLang);
@@ -81,7 +84,6 @@ function saveSettings() {
     
     extension_settings[extensionName] = {
         mode: activeMode,
-        autoTierSync: $('#rt-auto-tier').prop('checked'),
         smartScan: $('#rt-smart-scan').prop('checked'),
         scanDepth: parseInt($('#rt-scan-depth').val(), 10) || 10,
         promptLang: $('#rt-prompt-lang').val(),
@@ -207,9 +209,7 @@ function injectIntoPrompt() {
 // Auto-Tier Sync
 // =====================
 function syncTierToCP(rel) {
-    const settings = getSettings();
-    if (!settings.autoTierSync) return;
-    rel.tier = getTierFromCP(rel.cp);
+    rel.tier = getTierFromCP(rel.cp, rel.bond);
 }
 
 // =====================
@@ -249,13 +249,18 @@ async function runAIAnalysis() {
                 { role: "system", content: sysPrompt },
                 { role: "user", content: recentMessages }
             ];
-            const generator = await context.ConnectionManagerRequestService.sendRequest(
+            const createGenerator = await context.ConnectionManagerRequestService.sendRequest(
                 settings.connectionProfile, messages, undefined, { stream: false }
             );
-            if (generator) {
-                if (typeof generator[Symbol.asyncIterator] === 'function') {
-                    for await (const chunk of generator) result += chunk || "";
-                } else result = typeof generator === 'string' ? generator : String(generator);
+            if (typeof createGenerator === 'function') {
+                const generator = createGenerator();
+                for await (const chunk of generator) {
+                    if (chunk && chunk.text !== undefined) result += chunk.text;
+                }
+            } else if (createGenerator && typeof createGenerator === 'object') {
+                result = createGenerator.content || createGenerator.text || String(createGenerator);
+            } else if (typeof createGenerator === 'string') {
+                result = createGenerator;
             }
         } else {
             debugLog("Using Main API");
@@ -274,13 +279,18 @@ async function runAIAnalysis() {
         
         if (!Array.isArray(newRelations)) return;
         
-        // Normalize
-        for (const rel of newRelations) {
+        // Normalize and Apply Rules
+        for (let i = 0; i < newRelations.length; i++) {
+            const rel = newRelations[i];
             rel.cp = Math.max(-100, Math.min(100, parseInt(rel.cp) || 0));
-            const tierMatch = VALID_TIERS.find(t => t.toLowerCase() === (rel.tier || '').toLowerCase());
-            rel.tier = tierMatch || getTierFromCP(rel.cp);
             if (!VALID_BONDS.includes(rel.bond)) rel.bond = '[P]';
-            if (settings.autoTierSync) rel.tier = getTierFromCP(rel.cp);
+            
+            // Check against previous rules if it existed
+            const oldRel = relationsData.find(r => r.source === rel.source && r.target === rel.target);
+            enforceRules(rel, oldRel);
+            
+            // Sync tier
+            rel.tier = getTierFromCP(rel.cp, rel.bond);
         }
 
         const msgIndex = context.chat.length;
@@ -306,6 +316,7 @@ async function runAIAnalysis() {
 
 function applyChanges(newRelations, msgIndex) {
     let changeSummary = [];
+    let isNewSpawn = false;
     
     for (const newRel of newRelations) {
         const oldRel = relationsData.find(r => r.source === newRel.source && r.target === newRel.target);
@@ -318,10 +329,24 @@ function applyChanges(newRelations, msgIndex) {
                 const diff = newRel.cp - oldRel.cp;
                 if (diff !== 0) changeSummary.push(`${newRel.source} (${diff > 0 ? '+' : ''}${diff} CP)`);
             }
+            // Update in place
+            Object.assign(oldRel, newRel);
+        } else {
+            // SPONTANEOUS SPAWN: The AI detected a new relationship!
+            relationsData.push(newRel);
+            changeSummary.push(`New: ${newRel.source} ↔ ${newRel.target}`);
+            isNewSpawn = true;
+            
+            const key = getPairKey(newRel.source, newRel.target);
+            addHistoryEntry(historyMap, key, {
+                timestamp: Date.now(),
+                msgIndex: msgIndex,
+                changes: `Relationship discovered (${newRel.bond}, CP: ${newRel.cp})`,
+                cpBefore: 0, cpAfter: newRel.cp
+            });
         }
     }
     
-    relationsData = newRelations;
     renderCards();
     injectIntoPrompt();
     saveRelations();
@@ -376,8 +401,10 @@ function hideHybridBanner() {
 function getBondColor(bond) {
     switch(bond) {
         case '[R]': return '#ff6b81';
-        case '[F]': return '#70a1ff';
+        case '[PL]': return '#feca57';
         case '[P]': return '#7bed9f';
+        case '[F]': return '#70a1ff';
+        case '[C]': return '#a29bfe';
         case '[H]': return '#ff4757';
         default: return '#ffa502';
     }
@@ -426,7 +453,20 @@ function renderCards() {
         card.querySelector('.rt-source').textContent = rel.source;
         card.querySelector('.rt-target').textContent = rel.target;
         card.querySelector('.rt-bond-type').value = rel.bond;
-        card.querySelector('.rt-tier').value = rel.tier;
+        
+        // Populate Tier Options dynamically based on Bond Type
+        const tierSelect = card.querySelector('.rt-tier');
+        const contextualLabels = CONTEXTUAL_TIERS[rel.bond] || CONTEXTUAL_TIERS['[P]'];
+        
+        tierSelect.innerHTML = '';
+        for (let i = 0; i < VALID_TIERS.length; i++) {
+            const opt = document.createElement('option');
+            opt.value = contextualLabels[i];
+            opt.textContent = contextualLabels[i];
+            tierSelect.appendChild(opt);
+        }
+        
+        card.querySelector('.rt-tier').value = getTierFromCP(rel.cp, rel.bond);
         card.querySelector('.rt-label').value = rel.label;
         card.querySelector('.rt-cp-slider').value = rel.cp;
         card.querySelector('.rt-cp-value').textContent = rel.cp;
@@ -466,6 +506,23 @@ function renderCards() {
         // Bond type
         card.querySelector('.rt-bond-type').addEventListener('change', (e) => {
             relationsData[index].bond = e.target.value;
+            enforceRules(relationsData[index]); // Ensure rules (like family cap) are respected when switching manually
+            
+            // Re-render tier dropdown for new bond type
+            const newContextualLabels = CONTEXTUAL_TIERS[relationsData[index].bond] || CONTEXTUAL_TIERS['[P]'];
+            tierSelect.innerHTML = '';
+            for (let i = 0; i < VALID_TIERS.length; i++) {
+                const opt = document.createElement('option');
+                opt.value = newContextualLabels[i];
+                opt.textContent = newContextualLabels[i];
+                tierSelect.appendChild(opt);
+            }
+            
+            syncTierToCP(relationsData[index]);
+            card.querySelector('.rt-tier').value = relationsData[index].tier;
+            card.querySelector('.rt-cp-slider').value = relationsData[index].cp;
+            card.querySelector('.rt-cp-value').textContent = relationsData[index].cp;
+            
             updateSliderStyle(sliderElement, relationsData[index].cp, e.target.value);
             updateCardAccent(card, e.target.value);
             injectIntoPrompt();
@@ -628,7 +685,7 @@ async function initUI() {
         });
 
         // Settings listeners
-        $('#rt-auto-tier, #rt-smart-scan, #rt-debug').on('change', saveSettings);
+        $('#rt-smart-scan, #rt-debug').on('change', saveSettings);
         $('#rt-scan-depth').on('input change', saveSettings);
         $('#rt-prompt-lang, #rt-connection-profile').on('change', saveSettings);
         
