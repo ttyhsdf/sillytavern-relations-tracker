@@ -14,15 +14,23 @@
                         <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
                     </div>
                     <div class="inline-drawer-content rt-settings-section" style="display: none;">
-                        <div class="rt-row" style="align-items: center; justify-content: space-between;">
-                            <label title="Automatically evaluate relationships using AI in the background after each message"><input type="checkbox" id="rt-auto-ai" /> Auto AI Mode</label>
-                            <label title="Show debug information and JSON responses in console"><input type="checkbox" id="rt-debug" /> Debug</label>
+                        <!-- Mode Selection -->
+                        <label style="margin-bottom: 4px; font-weight: 600; font-size: 0.85em; color: var(--grey50);">AI MODE</label>
+                        <div class="rt-mode-toggle">
+                            <button class="menu_button rt-mode-btn" data-mode="manual" title="All changes are manual">Manual</button>
+                            <button class="menu_button rt-mode-btn active" data-mode="auto" title="AI evaluates and applies changes automatically">Auto</button>
+                            <button class="menu_button rt-mode-btn" data-mode="hybrid" title="AI suggests changes, you confirm or dismiss">Hybrid</button>
+                        </div>
+
+                        <div class="rt-row" style="margin-top: 8px;">
+                            <label><input type="checkbox" id="rt-auto-tier" checked /> Auto-Tier Sync (CP drives Tier)</label>
+                            <label><input type="checkbox" id="rt-smart-scan" checked /> Smart Scan</label>
                         </div>
                         
                         <div class="rt-row" style="margin-top: 5px;">
                             <div class="rt-field-group flex1">
-                                <label title="Number of recent messages to analyze">Context Depth</label>
-                                <input type="number" class="text_pole" id="rt-scan-depth" value="5" min="1" max="100">
+                                <label>Context Depth</label>
+                                <input type="number" class="text_pole" id="rt-scan-depth" value="10" min="1" max="100">
                             </div>
                             <div class="rt-field-group flex1">
                                 <label>Prompt Language</label>
@@ -42,6 +50,20 @@
                                 </select>
                             </div>
                         </div>
+
+                        <div class="rt-row" style="margin-top: 5px;">
+                            <label><input type="checkbox" id="rt-debug" /> Debug Mode</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hybrid Mode Pending Banner (hidden by default) -->
+                <div id="rt-hybrid-banner" class="rt-hybrid-banner" style="display: none;">
+                    <div class="rt-hybrid-title"><i class="fa-solid fa-robot"></i> AI Suggestion</div>
+                    <div id="rt-hybrid-summary" class="rt-hybrid-summary"></div>
+                    <div class="rt-hybrid-actions">
+                        <button id="rt-hybrid-apply" class="menu_button interactable rt-hybrid-apply"><i class="fa-solid fa-check"></i> Apply</button>
+                        <button id="rt-hybrid-dismiss" class="menu_button interactable rt-hybrid-dismiss"><i class="fa-solid fa-xmark"></i> Dismiss</button>
                     </div>
                 </div>
 
@@ -52,13 +74,20 @@
                 
                 <!-- Bottom Controls -->
                 <div class="rt-controls">
-                    <button id="rt-add-btn" class="menu_button interactable" style="flex: 1; margin-right: 5px;">
+                    <button id="rt-add-btn" class="menu_button interactable" style="flex: 1;">
                         <i class="fa-solid fa-plus"></i> Add
                     </button>
-                    <button id="rt-refresh-btn" class="menu_button interactable" style="flex: 1; margin-left: 5px;">
-                        <i class="fa-solid fa-rotate-right"></i> Scan Chat
+                    <button id="rt-refresh-btn" class="menu_button interactable" style="flex: 1;">
+                        <i class="fa-solid fa-rotate-right"></i> Scan
+                    </button>
+                    <button id="rt-export-btn" class="menu_button interactable" style="flex: 1;">
+                        <i class="fa-solid fa-download"></i> Export
+                    </button>
+                    <button id="rt-import-btn" class="menu_button interactable" style="flex: 1;">
+                        <i class="fa-solid fa-upload"></i> Import
                     </button>
                 </div>
+                <input type="file" id="rt-import-file" accept=".json" style="display: none;">
             </div>
 
         </div>
@@ -74,9 +103,19 @@
                 <span class="rt-target" contenteditable="true" data-field="target" title="Click to edit">Target</span>
                 <span class="rt-bond-label" data-bond="[P]"></span>
             </div>
-            <div class="rt-delete-btn fa-solid fa-trash" title="Delete"></div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="rt-history-toggle fa-solid fa-clock-rotate-left" title="Show history"></div>
+                <div class="rt-delete-btn fa-solid fa-trash" title="Delete"></div>
+            </div>
         </div>
         
+        <!-- History Log (collapsed by default) -->
+        <div class="rt-history-panel" style="display: none;">
+            <div class="rt-history-content">
+                <div class="rt-history-empty">No changes recorded yet.</div>
+            </div>
+        </div>
+
         <div class="rt-card-body">
             <div class="rt-row flex-container">
                 <div class="rt-field-group flex1">
