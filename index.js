@@ -1,6 +1,6 @@
 import { extension_settings, getContext } from "../../../extensions.js";
 import { eventSource, event_types, generateRaw, saveSettingsDebounced, setExtensionPrompt } from "../../../../script.js";
-import { systemPrompts } from "./prompts.js";
+import { systemPrompts, VALID_TIERS, VALID_BONDS } from "./prompts.js";
 
 const extensionName = "sillytavern-relations-tracker";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
@@ -263,6 +263,18 @@ async function handleAutoAI() {
         const newRelations = JSON.parse(jsonStr);
         
         if (Array.isArray(newRelations)) {
+            // Normalize AI output to match valid dropdown values
+            for (const rel of newRelations) {
+                rel.cp = Math.max(-100, Math.min(100, parseInt(rel.cp) || 0));
+                
+                // Fix tier: case-insensitive match
+                const tierMatch = VALID_TIERS.find(t => t.toLowerCase() === (rel.tier || '').toLowerCase());
+                rel.tier = tierMatch || 'Neutral';
+                
+                // Fix bond: must be exact
+                if (!VALID_BONDS.includes(rel.bond)) rel.bond = '[P]';
+            }
+            
             let changed = false;
             let changeSummary = [];
             
