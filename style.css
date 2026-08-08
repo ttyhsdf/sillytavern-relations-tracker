@@ -122,3 +122,37 @@
 .rt-bond-type option[value="[P]"] { color: #7bed9f; }
 .rt-bond-type option[value="[F]"] { color: #70a1ff; }
 .rt-bond-type option[value="[H]"] { color: #ff4757; }
+
+/* Dynamic Slider Styling */
+.rt-cp-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 5px;
+    background: linear-gradient(
+        to right, 
+        var(--slider-color, #ffa502) 0%, 
+        var(--slider-color, #ffa502) var(--slider-progress, 50%), 
+        rgba(255, 255, 255, 0.1) var(--slider-progress, 50%), 
+        rgba(255, 255, 255, 0.1) 100%
+    );
+    outline: none;
+    transition: background 0.1s ease;
+}
+
+.rt-cp-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--slider-color, #ffa502);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    transition: transform 0.1s;
+}
+
+.rt-cp-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}

@@ -1,5 +1,6 @@
 import { extension_settings, getContext } from "../../../extensions.js";
 import { eventSource, event_types, generateRaw, saveSettingsDebounced } from "../../../../script.js";
+import { systemPrompts } from "./prompts.js";
 
 const extensionName = "sillytavern-relations-tracker";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
@@ -148,33 +149,11 @@ async function handleAutoAI() {
     const depth = settings.scanDepth;
     const recentMessages = context.chat.slice(-depth).map(m => `${m.is_user ? 'User' : m.name}: ${m.mes}`).join('\n\n');
     
-    let promptInstruction = "";
-    if (settings.promptLang === 'RU') {
-        promptInstruction = `Текущие отношения (в формате JSON):
-${JSON.stringify(relationsData, null, 2)}
+    const relationsJson = JSON.stringify(relationsData, null, 2);
+    let promptInstruction = systemPrompts[settings.promptLang] || systemPrompts['EN'];
+    promptInstruction = promptInstruction.replace('{{RELATIONS_JSON}}', relationsJson);
 
-Основываясь на последних событиях в чате, реши, должны ли измениться очки отношений (cp), уровень (tier) или тип связи (bond).
-Условия изменения CP: +1 до +5 за позитивные взаимодействия, -1 до -5 за конфликты. Если ничего не произошло, CP не меняется.
-Верни ТОЛЬКО валидный JSON массив с обновленными отношениями в таком же формате. Без лишнего текста.`;
-    } else if (settings.promptLang === 'UK') {
-        promptInstruction = `Поточні відносини (у форматі JSON):
-${JSON.stringify(relationsData, null, 2)}
-
-Грунтуючись на останніх подіях у чаті, виріши, чи повинні змінитися бали відносин (cp), рівень (tier) або тип зв'язку (bond).
-Умови зміни CP: +1 до +5 за позитивні взаємодії, -1 до -5 за конфлікти. Якщо нічого не відбулося, CP не змінюється.
-Поверни ТІЛЬКИ валідний JSON масив з оновленими відносинами у такому ж форматі. Без зайвого тексту.`;
-    } else {
-        // EN fallback
-        promptInstruction = `Current relations state (JSON array):
-${JSON.stringify(relationsData, null, 2)}
-
-Based on the recent chat events, decide if Charm Points (cp), tier, or bond should change.
-CP changes: +1 to +5 for positive interactions, -1 to -5 for conflicts. If nothing significant happened, do not change CP.
-Return ONLY a valid JSON array of the updated relations in the exact same format. Do not output any markdown formatting or extra text.`;
-    }
-
-    const systemPrompt = `You are a background relation tracking AI. Read the recent chat history and update the relationship state.
-${promptInstruction}`;
+    const systemPrompt = `You are a background relation tracking AI. Read the recent chat history and update the relationship state.\n\n${promptInstruction}`;
 
     try {
         isGenerating = true;
@@ -261,6 +240,23 @@ ${promptInstruction}`;
     }
 }
 
+function getBondColor(bond) {
+    switch(bond) {
+        case '[R]': return '#ff6b81'; // Romantic
+        case '[F]': return '#70a1ff'; // Family
+        case '[P]': return '#7bed9f'; // Platonic
+        case '[H]': return '#ff4757'; // Hostile
+        default: return '#ffa502';
+    }
+}
+
+function updateSliderStyle(slider, cp, bond) {
+    const percent = ((cp + 100) / 200) * 100;
+    const color = getBondColor(bond);
+    slider.style.setProperty('--slider-progress', `${percent}%`);
+    slider.style.setProperty('--slider-color', color);
+}
+
 function renderCards() {
     const container = document.getElementById('rt-cards-container');
     if (!container) return;
@@ -290,15 +286,20 @@ function renderCards() {
         card.querySelector('.rt-cp-slider').value = rel.cp;
         card.querySelector('.rt-cp-value').textContent = rel.cp;
         
+        const sliderElement = card.querySelector('.rt-cp-slider');
+        updateSliderStyle(sliderElement, rel.cp, rel.bond);
+        
         card.querySelector('.rt-cp-slider').addEventListener('input', (e) => {
-            const val = e.target.value;
+            const val = parseInt(e.target.value, 10);
             card.querySelector('.rt-cp-value').textContent = val;
-            relationsData[index].cp = parseInt(val, 10);
+            relationsData[index].cp = val;
+            updateSliderStyle(e.target, val, relationsData[index].bond);
             injectIntoPrompt();
         });
         
         card.querySelector('.rt-bond-type').addEventListener('change', (e) => {
             relationsData[index].bond = e.target.value;
+            updateSliderStyle(sliderElement, relationsData[index].cp, e.target.value);
             injectIntoPrompt();
         });
         
