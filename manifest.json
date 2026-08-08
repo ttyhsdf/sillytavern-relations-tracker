@@ -1,12 +1,11 @@
 {
-    "name": "Relations Tracker",
-    "description": "Visualizes and manages character relationships, Charm Points (CP), and Bond Types. Injects relationship data into the prompt context.",
-    "version": "1.0.0",
+    "display_name": "Relations Tracker",
+    "loading_order": 100,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
     "author": "Antigravity",
-    "main": "index.js",
-    "st_version": ">=1.11.0",
-    "assets": [
-        "style.css",
-        "index.html"
-    ]
+    "version": "1.0.1",
+    "auto_update": false
 }
