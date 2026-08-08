@@ -7,6 +7,37 @@
         <div class="inline-drawer-content" style="display: none;">
             
             <div class="rt-body">
+                <div class="rt-settings-section" style="padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px; margin-bottom: 10px; border: 1px solid var(--SmartThemeQuoteColor);">
+                    <div class="rt-row" style="align-items: center; justify-content: space-between;">
+                        <label title="Automatically evaluate relationships using AI in the background after each message"><input type="checkbox" id="rt-auto-ai" /> Enable Auto AI Mode</label>
+                        <label title="Show debug information and JSON responses in console"><input type="checkbox" id="rt-debug" /> Debug Mode</label>
+                    </div>
+                    
+                    <div class="rt-row" style="margin-top: 10px;">
+                        <div class="rt-field-group flex1">
+                            <label title="Number of recent messages to analyze">Context Depth</label>
+                            <input type="number" class="text_pole" id="rt-scan-depth" value="5" min="1" max="100">
+                        </div>
+                        <div class="rt-field-group flex1">
+                            <label>Prompt Language</label>
+                            <select id="rt-prompt-lang" class="text_pole">
+                                <option value="EN">English</option>
+                                <option value="RU">Russian</option>
+                                <option value="UK">Ukrainian</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="rt-row" style="margin-top: 10px;">
+                        <div class="rt-field-group" style="width: 100%;">
+                            <label>Connection Profile (Optional API Override)</label>
+                            <select id="rt-connection-profile" class="text_pole">
+                                <option value="">-- Use Main API --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="rt-cards-container" class="rt-cards-container">
                     <!-- Cards will be injected here via JS -->
                     <div class="rt-empty-state">No relationship data found in chat history.</div>
