@@ -5,8 +5,6 @@ import { getTierFromCP, VALID_TIERS, CONTEXTUAL_TIERS } from "./tiers.js";
 import { enforceRules } from "./rules.js";
 import { createHistoryEntry, addHistoryEntry, getPairKey, renderHistoryHTML } from "./history.js";
 import { smartScan, fullScan } from "./scanner.js";
-import { createHistoryEntry, addHistoryEntry, getPairKey, renderHistoryHTML } from "./history.js";
-import { smartScan, fullScan } from "./scanner.js";
 
 const extensionName = "sillytavern-relations-tracker";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
