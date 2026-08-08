@@ -91,14 +91,55 @@
                 
                 <div class="rt-field-group flex1">
                     <label>Tier</label>
-                    <input type="text" class="text_pole rt-tier" data-field="tier" placeholder="e.g. Warm, Cold...">
+                    <select class="text_pole rt-tier" data-field="tier">
+                        <option value="Frozen">🧊 Frozen</option>
+                        <option value="Cold">❄ Cold</option>
+                        <option value="Distant">🌫 Distant</option>
+                        <option value="Neutral" selected>⚖ Neutral</option>
+                        <option value="Warm">☀ Warm</option>
+                        <option value="Close">🔥 Close</option>
+                        <option value="Devoted">💎 Devoted</option>
+                    </select>
                 </div>
             </div>
             
             <div class="rt-row">
                 <div class="rt-field-group" style="width: 100%;">
                     <label>Label</label>
-                    <input type="text" class="text_pole rt-label" data-field="label" placeholder="Short description of how they feel">
+                    <div class="rt-label-wrapper">
+                        <input type="text" class="text_pole rt-label" data-field="label" placeholder="How they feel about each other...">
+                        <select class="rt-label-presets" title="Quick-fill label from presets">
+                            <option value="">✦ Presets...</option>
+                            <optgroup label="Romantic">
+                                <option value="Strangers with tension">Strangers with tension</option>
+                                <option value="Flirting stage">Flirting stage</option>
+                                <option value="Mutual crush">Mutual crush</option>
+                                <option value="Dating">Dating</option>
+                                <option value="Deeply in love">Deeply in love</option>
+                            </optgroup>
+                            <optgroup label="Platonic">
+                                <option value="Just met">Just met</option>
+                                <option value="Acquaintances">Acquaintances</option>
+                                <option value="Wary allies">Wary allies</option>
+                                <option value="Good friends">Good friends</option>
+                                <option value="Best friends">Best friends</option>
+                            </optgroup>
+                            <optgroup label="Family">
+                                <option value="Estranged">Estranged</option>
+                                <option value="Distant relatives">Distant relatives</option>
+                                <option value="Family bond">Family bond</option>
+                                <option value="Protective bond">Protective bond</option>
+                                <option value="Unbreakable bond">Unbreakable bond</option>
+                            </optgroup>
+                            <optgroup label="Hostile">
+                                <option value="Mild annoyance">Mild annoyance</option>
+                                <option value="Rivals">Rivals</option>
+                                <option value="Open conflict">Open conflict</option>
+                                <option value="Sworn enemies">Sworn enemies</option>
+                                <option value="Blood feud">Blood feud</option>
+                            </optgroup>
+                        </select>
+                    </div>
                 </div>
             </div>
             

@@ -1,5 +1,5 @@
 import { extension_settings, getContext } from "../../../extensions.js";
-import { eventSource, event_types, generateRaw, saveSettingsDebounced } from "../../../../script.js";
+import { eventSource, event_types, generateRaw, saveSettingsDebounced, setExtensionPrompt } from "../../../../script.js";
 import { systemPrompts } from "./prompts.js";
 
 const extensionName = "sillytavern-relations-tracker";
@@ -183,9 +183,15 @@ function injectIntoPrompt() {
     const tag = buildRelationsTag();
     if (!tag) return;
     
-    const context = getContext();
-    if (typeof context.extensionPrompt !== 'undefined') {
-        context.extensionPrompt["relationsTracker"] = tag;
+    // Use ST's official API for reliable injection
+    try {
+        setExtensionPrompt(extensionName, tag, 1, 0);
+    } catch {
+        // Fallback for older ST versions
+        const context = getContext();
+        if (context?.extensionPrompt) {
+            context.extensionPrompt["relationsTracker"] = tag;
+        }
     }
 }
 
@@ -371,7 +377,7 @@ function renderCards() {
             saveRelations();
         });
         
-        card.querySelector('.rt-tier').addEventListener('input', (e) => {
+        card.querySelector('.rt-tier').addEventListener('change', (e) => {
             relationsData[index].tier = e.target.value;
             injectIntoPrompt();
             saveRelations();
@@ -382,6 +388,20 @@ function renderCards() {
             injectIntoPrompt();
             saveRelations();
         });
+        
+        // Label preset dropdown fills the text field
+        const labelPresets = card.querySelector('.rt-label-presets');
+        if (labelPresets) {
+            labelPresets.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    card.querySelector('.rt-label').value = e.target.value;
+                    relationsData[index].label = e.target.value;
+                    e.target.selectedIndex = 0; // Reset dropdown back to "Presets..."
+                    injectIntoPrompt();
+                    saveRelations();
+                }
+            });
+        }
         
         card.querySelector('.rt-source').addEventListener('blur', (e) => {
             relationsData[index].source = e.target.textContent.trim();
