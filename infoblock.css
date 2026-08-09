@@ -66,6 +66,19 @@
     color: var(--SmartThemeBodyColor, #fff);
 }
 
+.rt-ib-worldstate {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.8em;
+    color: #ffd32a;
+    text-align: center;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .rt-infoblock-close {
     cursor: pointer;
     color: var(--grey50, #888);

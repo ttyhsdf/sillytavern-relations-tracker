@@ -927,7 +927,7 @@ function renderCards() {
         container.appendChild(card);
     });
 
-    updateInfoblock(relationsData, getBondColor, getSettings);
+    updateInfoblock(relationsData, getBondColor, getSettings, getContext);
 }
 
 // =====================

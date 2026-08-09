@@ -56,8 +56,36 @@ function escapeHtml(str) {
 /**
  * Updates the contents of the infoblock panel.
  */
-export function updateInfoblock(relationsData, getBondColor, getSettings) {
+export function updateInfoblock(relationsData, getBondColor, getSettings, getContext) {
     if (!infoblockContent) return;
+
+    // Parse world state from the last AI message
+    const worldStateEl = document.getElementById('rt-ib-worldstate');
+    if (worldStateEl && getContext) {
+        const context = getContext();
+        let foundWorldState = false;
+        
+        if (context && context.chat && context.chat.length > 0) {
+            // Scan backwards up to 5 messages to find the latest time tag
+            for (let i = context.chat.length - 1; i >= Math.max(0, context.chat.length - 5); i--) {
+                const msg = context.chat[i];
+                if (msg && msg.mes && msg.is_user === false) { // AI message
+                    // Look for **MM/DD • HH/MM • Location • ...**
+                    const match = msg.mes.match(/\*\*(.*?•.*?•.*?)\*\*/);
+                    if (match && match[1]) {
+                        worldStateEl.textContent = match[1].trim();
+                        worldStateEl.style.display = 'block';
+                        foundWorldState = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (!foundWorldState) {
+            worldStateEl.style.display = 'none';
+        }
+    }
 
     if (!relationsData || relationsData.length === 0) {
         infoblockContent.innerHTML = '<div style="color:var(--grey50); text-align:center; padding:10px;">No active relationships.</div>';
