@@ -168,26 +168,32 @@ function loadConnectionProfiles() {
 function extractAndParseRelations(raw) {
     if (!raw || typeof raw !== 'string') return null;
 
-    // Pre-normalize bond full names that AI loves to write:
-    // "[P] Platonic" → "[P]", "[R] Romantic" → "[R]", etc.
+    // Pre-normalize bond full names: "[P] Platonic" → "[P]" etc.
     let text = raw
-        .replace(/"\[R\]\s*Romantic"/g, '"[R]"')
-        .replace(/"\[P\]\s*Platonic(?:\s+Love)?"/g, (m) => m.includes('Love') ? '"[PL]"' : '"[P]"')
-        .replace(/"\[PL\]\s*Platonic\s*Love"/g, '"[PL]"')
-        .replace(/"\[F\]\s*Family"/g, '"[F]"')
-        .replace(/"\[H\]\s*Hostile"/g, '"[H]"')
-        .replace(/"\[C\]\s*Complicated"/g, '"[C]"');
+        .replace(/"(\[R\])\s*Romantic"/g, '"$1"')
+        .replace(/"(\[PL\])\s*Platonic\s*Love"/g, '"$1"')
+        .replace(/"(\[P\])\s*Platonic"/g, '"$1"')
+        .replace(/"(\[F\])\s*Family"/g, '"$1"')
+        .replace(/"(\[H\])\s*Hostile"/g, '"$1"')
+        .replace(/"(\[C\])\s*Complicated"/g, '"$1"');
 
-    // Strategy 1: direct parse
+    // Strategy 1: direct parse (clean response)
     try {
         const p = JSON.parse(text.trim());
         if (Array.isArray(p)) return p;
     } catch (_) {}
 
-    // Strategy 2: bracket-depth walk — immune to [P] inside string values
-    const start = text.indexOf('[');
-    if (start !== -1) {
+    // Strategy 2: scan ALL `[…]` arrays via bracket-depth walk,
+    // collect all parseable arrays, return the best one (most relation-like objects).
+    // KEY FIX: instead of break on first fail, we continue scanning the rest of the text.
+    const candidates = [];
+    let scanFrom = 0;
+    while (scanFrom < text.length) {
+        const start = text.indexOf('[', scanFrom);
+        if (start === -1) break;
+
         let depth = 0, inStr = false, esc = false;
+        let found = false;
         for (let i = start; i < text.length; i++) {
             const ch = text[i];
             if (esc) { esc = false; continue; }
@@ -200,15 +206,28 @@ function extractAndParseRelations(raw) {
                 if (depth === 0) {
                     try {
                         const p = JSON.parse(text.slice(start, i + 1));
-                        if (Array.isArray(p)) return p;
+                        if (Array.isArray(p)) candidates.push(p);
                     } catch (_) {}
+                    scanFrom = i + 1; // continue scanning AFTER this bracket group
+                    found = true;
                     break;
                 }
             }
         }
+        if (!found) break; // no matching bracket found, stop
     }
 
-    // Strategy 3: strip markdown fences
+    if (candidates.length > 0) {
+        // Return the best candidate: one that has objects with char_a/char_b or source/target keys
+        const relationsLike = (arr) => arr.length > 0 && typeof arr[0] === 'object' &&
+            arr[0] !== null &&
+            (('char_a' in arr[0] || 'source' in arr[0]) || ('char_b' in arr[0] || 'target' in arr[0]));
+
+        const best = candidates.find(relationsLike) || candidates[candidates.length - 1];
+        return best;
+    }
+
+    // Strategy 3: strip markdown fences then retry
     const stripped = text.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '').trim();
     try {
         const p = JSON.parse(stripped);
@@ -217,6 +236,7 @@ function extractAndParseRelations(raw) {
 
     return null;
 }
+
 
 /**
  * Extract a text response from any ConnectionManager response shape.
@@ -519,7 +539,15 @@ function applyChanges(newRelations, msgIndex) {
             context?.chat || [], newRel.source, newRel.target, Math.max(0, msgIndex - 10)
         );
 
-        const oldIndex = mergedData.findIndex(r => r.source === newRel.source && r.target === newRel.target);
+        // Normalize source/target — strip stray leading/trailing punctuation like "(Seraphina" → "Seraphina"
+        newRel.source = newRel.source.replace(/^[^\w]+|[^\w]+$/g, '').trim() || newRel.source;
+        newRel.target = newRel.target.replace(/^[^\w]+|[^\w]+$/g, '').trim() || newRel.target;
+
+        const oldIndex = mergedData.findIndex(r =>
+            // Match in either direction — AI may flip char_a/char_b
+            (r.source === newRel.source && r.target === newRel.target) ||
+            (r.source === newRel.target && r.target === newRel.source)
+        );
         if (oldIndex !== -1) {
             const oldRel = mergedData[oldIndex];
             const entry = createHistoryEntry(oldRel, newRel, msgIndex);
