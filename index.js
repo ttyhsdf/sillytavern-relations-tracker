@@ -142,17 +142,15 @@ function loadRelationsFromSettings() {
     const promptLang = $('#rt-prompt-lang');
     if (settings.promptLang) promptLang.val(settings.promptLang);
     promptLang.off('change').on('change', function() {
-        settings.promptLang = $(this).val();
-        saveSettingsDebounced();
+        saveSettings();
         injectIntoPrompt();
     });
 
     const uiLang = $('#rt-ui-lang');
     if (settings.uiLang) uiLang.val(settings.uiLang);
     uiLang.off('change').on('change', function() {
-        settings.uiLang = $(this).val();
-        saveSettingsDebounced();
-        setUILanguage(settings.uiLang);
+        saveSettings();
+        setUILanguage($(this).val());
         translateDOM(document.getElementById('relations_tracker_settings'));
         const ib = document.getElementById('rt-infoblock-panel');
         if(ib) translateDOM(ib);
