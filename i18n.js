@@ -31,6 +31,7 @@ const dictionaries = {
         'settings.customBonds': 'Custom Bonds',
         'settings.autoRegex': 'Auto-Install Regex Rules',
         'settings.autoRegex.desc': 'Adds rules to beautifully format and hide system events.',
+        'settings.cb.desc': 'Define custom relationship types (e.g., Mentor, Pet) for the AI to track.',
         'settings.cb.tagPlaceholder': '[Tag]',
         'settings.cb.namePlaceholder': 'Name',
         'settings.cb.hintPlaceholder': 'Hint (or leave blank) -> click Generate',
@@ -108,6 +109,7 @@ const dictionaries = {
         'settings.customBonds': 'Кастомные связи',
         'settings.autoRegex': 'Установить правила Regex',
         'settings.autoRegex.desc': 'Добавляет правила для красивого форматирования системных событий.',
+        'settings.cb.desc': 'Создавайте свои типы связей (например: Наставник, Питомец), чтобы ИИ мог их отслеживать.',
         'settings.cb.tagPlaceholder': '[Тег]',
         'settings.cb.namePlaceholder': 'Название',
         'settings.cb.hintPlaceholder': 'Подсказка (или пусто) -> нажать Generate',
@@ -185,6 +187,7 @@ const dictionaries = {
         'settings.customBonds': 'Кастомні зв\'язки',
         'settings.autoRegex': 'Встановити правила Regex',
         'settings.autoRegex.desc': 'Додає правила для гарного форматування системних подій.',
+        'settings.cb.desc': 'Створюйте власні типи зв\'язків (наприклад: Наставник, Улюбленець), щоб ШІ міг їх відстежувати.',
         'settings.cb.tagPlaceholder': '[Тег]',
         'settings.cb.namePlaceholder': 'Назва',
         'settings.cb.hintPlaceholder': 'Підказка (або порожньо) -> натиснути Generate',
@@ -263,9 +266,15 @@ export function translateDOM(container = document) {
     const elements = container.querySelectorAll('[data-i18n]');
     elements.forEach(el => {
         const key = el.getAttribute('data-i18n');
-        // If element is an input button, set value. Otherwise set textContent/innerHTML safely
-        if (el.tagName === 'INPUT' && el.type === 'button') {
-            el.value = t(key);
+        // If element is an input button, set value.
+        // If it's a text input, set placeholder.
+        // Otherwise set textContent safely.
+        if (el.tagName === 'INPUT') {
+            if (el.type === 'button') {
+                el.value = t(key);
+            } else if (el.type === 'text') {
+                el.placeholder = t(key);
+            }
         } else {
             // For elements that might have icons inside, we need to be careful not to overwrite them.
             // A simple approach is to find the nearest text node, or just use spans.
