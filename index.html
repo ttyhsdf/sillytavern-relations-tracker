@@ -256,17 +256,21 @@
                 </div>
             </div>
             
-            <div class="rt-adv-panel" style="display: none;">
-                <div class="rt-adv-content" style="padding: 0; margin-top: 10px; gap: 6px;">
-                    <div class="rt-stat-row">
-                        <div class="rt-stat-label" style="width: 35px;">Trust</div>
-                        <div class="rt-stat-bar-bg"><div class="rt-stat-bar-fill rt-trust-fill" style="width: 50%;"></div></div>
-                        <span class="rt-trust-val" style="font-size:0.7em; font-weight:bold; width:20px; text-align:right;">0</span>
+            <div class="rt-adv-panel" style="display: none; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                <div class="rt-row flex-container">
+                    <div class="rt-field-group flex1">
+                        <div class="rt-cp-display">
+                            <label style="color: #70a1ff; font-weight: 600;">Trust</label>
+                            <span class="rt-trust-val" style="color: #70a1ff; font-weight:bold;">0</span>
+                        </div>
+                        <input type="range" min="-100" max="100" value="0" class="rt-cp-slider rt-trust-slider" style="--slider-color: #70a1ff;">
                     </div>
-                    <div class="rt-stat-row">
-                        <div class="rt-stat-label" style="width: 35px;">Lust</div>
-                        <div class="rt-stat-bar-bg"><div class="rt-stat-bar-fill rt-lust-fill" style="width: 50%;"></div></div>
-                        <span class="rt-lust-val" style="font-size:0.7em; font-weight:bold; width:20px; text-align:right;">0</span>
+                    <div class="rt-field-group flex1">
+                        <div class="rt-cp-display">
+                            <label style="color: #ff6b81; font-weight: 600;">Lust</label>
+                            <span class="rt-lust-val" style="color: #ff6b81; font-weight:bold;">0</span>
+                        </div>
+                        <input type="range" min="-100" max="100" value="0" class="rt-cp-slider rt-lust-slider" style="--slider-color: #ff6b81;">
                     </div>
                 </div>
             </div>

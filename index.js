@@ -682,10 +682,10 @@ function getBondColor(bond) {
     return info?.color || '#ffa502';
 }
 
-function updateSliderStyle(slider, cp, bond) {
+function updateSliderStyle(slider, cp, bond = null) {
     const percent = ((cp + 100) / 200) * 100;
     slider.style.setProperty('--slider-progress', `${percent}%`);
-    slider.style.setProperty('--slider-color', getBondColor(bond));
+    if (bond) slider.style.setProperty('--slider-color', getBondColor(bond));
 }
 
 function updateCardAccent(card, bond) {
@@ -800,11 +800,40 @@ function renderCards() {
                 advPanel.style.display = 'none';
             } else {
                 advPanel.style.display = 'block';
-                card.querySelector('.rt-trust-val').textContent = rel.trust || 0;
-                card.querySelector('.rt-trust-fill').style.width = Math.max(0, Math.min(100, ((rel.trust || 0) + 100) / 2)) + '%';
                 
-                card.querySelector('.rt-lust-val').textContent = rel.lust || 0;
-                card.querySelector('.rt-lust-fill').style.width = Math.max(0, Math.min(100, ((rel.lust || 0) + 100) / 2)) + '%';
+                const trustVal = card.querySelector('.rt-trust-val');
+                const trustSlider = card.querySelector('.rt-trust-slider');
+                if (trustSlider && trustVal) {
+                    trustSlider.value = rel.trust || 0;
+                    trustVal.textContent = trustSlider.value;
+                    updateSliderStyle(trustSlider, trustSlider.value);
+                    
+                    trustSlider.addEventListener('input', (e) => {
+                        const val = parseInt(e.target.value, 10);
+                        trustVal.textContent = val;
+                        relationsData[index].trust = val;
+                        updateSliderStyle(e.target, val);
+                        injectIntoPrompt();
+                        saveRelations();
+                    });
+                }
+                
+                const lustVal = card.querySelector('.rt-lust-val');
+                const lustSlider = card.querySelector('.rt-lust-slider');
+                if (lustSlider && lustVal) {
+                    lustSlider.value = rel.lust || 0;
+                    lustVal.textContent = lustSlider.value;
+                    updateSliderStyle(lustSlider, lustSlider.value);
+                    
+                    lustSlider.addEventListener('input', (e) => {
+                        const val = parseInt(e.target.value, 10);
+                        lustVal.textContent = val;
+                        relationsData[index].lust = val;
+                        updateSliderStyle(e.target, val);
+                        injectIntoPrompt();
+                        saveRelations();
+                    });
+                }
             }
         }
 
