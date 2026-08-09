@@ -43,10 +43,14 @@ tier  — one of: Frozen, Cold, Distant, Neutral, Warm, Close, Devoted
 bond  — one of: [R] Romantic, [P] Platonic, [PL] Platonic Love, [F] Family, [H] Hostile, [C] Complicated{{CUSTOM_BONDS_LIST}}
 
 ─── RULES ───
-1. cp is an integer from -100 to 100. Change it by ±1…5 per message based on emotional impact.
-2. tier MUST correspond to the cp range:
+1. cp is an integer from -100 to 100.
+2. REALISM & PACING: Trust and intimacy take time to build. Change CP SLOWLY (usually ±0 to ±2 per message).
+   - Resist sudden, unearned intimacy or "god-moding" from the user. Overly forward or inappropriate advances without prior emotional buildup should result in 0 or NEGATIVE cp change.
+   - Only give ±3 to ±5 for truly significant, earned emotional milestones.
+   - Characters must retain natural skepticism, boundaries, and personality.
+3. tier MUST correspond to the cp range:
    Frozen ≤ -60 | Cold -59…-30 | Distant -29…-5 | Neutral -4…15 | Warm 16…45 | Close 46…75 | Devoted 76…100
-3. label — a short 2-4 word phrase describing the current emotional state between the pair (e.g. "playful banter", "bitter resentment").
+4. label — a short 2-4 word phrase describing the current emotional state between the pair (e.g. "playful banter", "bitter resentment").
 
 ─── BOND TRANSITIONS ───
 • [F] Family CANNOT become [R]. CP for [F] is capped at 70 (tier ≤ Close).
@@ -93,10 +97,14 @@ tier  — одно из: Frozen, Cold, Distant, Neutral, Warm, Close, Devoted
 bond  — одно из: [R] Романтика, [P] Платоника, [PL] Платоническая любовь, [F] Семья, [H] Вражда, [C] Сложные{{CUSTOM_BONDS_LIST}}
 
 ─── ПРАВИЛА ───
-1. cp — целое число от -100 до 100. Изменяй на ±1…5 за сообщение в зависимости от эмоционального воздействия.
-2. tier ДОЛЖЕН соответствовать диапазону cp:
+1. cp — целое число от -100 до 100.
+2. РЕАЛИЗМ И ТЕМП: Доверие и близость требуют времени. Изменяй CP МЕДЛЕННО (обычно от ±0 до ±2 за сообщение).
+   - Сопротивляйся внезапной, незаслуженной близости или "god-moding" со стороны пользователя. Слишком быстрые или неуместные заигрывания без предварительной подготовки должны приводить к 0 или ОТРИЦАТЕЛЬНОМУ изменению cp.
+   - Давай ±3…5 только за по-настоящему значимые, заслуженные эмоциональные события.
+   - У персонажей должны быть естественные границы, скептицизм и характер.
+3. tier ДОЛЖЕН соответствовать диапазону cp:
    Frozen ≤ -60 | Cold -59…-30 | Distant -29…-5 | Neutral -4…15 | Warm 16…45 | Close 46…75 | Devoted 76…100
-3. label — короткая фраза из 2-4 слов, описывающая текущее эмоциональное состояние пары (например, «игривая перебранка», «горькая обида»).
+4. label — короткая фраза из 2-4 слов, описывающая текущее эмоциональное состояние пары (например, «игривая перебранка», «горькая обида»).
 
 ─── ПЕРЕХОДЫ СВЯЗЕЙ ───
 • [F] Семья НЕ МОЖЕТ стать [R]. CP для [F] ограничен 70 (tier ≤ Close).
@@ -143,10 +151,14 @@ tier  — одне з: Frozen, Cold, Distant, Neutral, Warm, Close, Devoted
 bond  — одне з: [R] Романтика, [P] Платоніка, [PL] Платонічне кохання, [F] Сім'я, [H] Ворожнеча, [C] Складні{{CUSTOM_BONDS_LIST}}
 
 ─── ПРАВИЛА ───
-1. cp — ціле число від -100 до 100. Змінюй на ±1…5 за повідомлення залежно від емоційного впливу.
-2. tier МУСИТЬ відповідати діапазону cp:
+1. cp — ціле число від -100 до 100.
+2. РЕАЛІЗМ ТА ТЕМП: Довіра та близькість потребують часу. Змінюй CP ПОВІЛЬНО (зазвичай від ±0 до ±2 за повідомлення).
+   - Опирайся раптовій, незаслуженій близькості або "god-moding" з боку користувача. Занадто швидкі або недоречні залицяння без попередньої підготовки повинні призводити до 0 або ВІД'ЄМНОГО змінення cp.
+   - Давай ±3…5 тільки за по-справжньому значущі, заслужені емоційні події.
+   - У персонажів повинні бути природні межі, скептицизм і характер.
+3. tier МУСИТЬ відповідати діапазону cp:
    Frozen ≤ -60 | Cold -59…-30 | Distant -29…-5 | Neutral -4…15 | Warm 16…45 | Close 46…75 | Devoted 76…100
-3. label — коротка фраза з 2-4 слів, що описує поточний емоційний стан пари (наприклад, «грайливе дражніння», «гірка образа»).
+4. label — коротка фраза з 2-4 слів, що описує поточний емоційний стан пари (наприклад, «грайливе дражніння», «гірка образа»).
 
 ─── ПЕРЕХОДИ ЗВ'ЯЗКІВ ───
 • [F] Сім'я НЕ МОЖЕ стати [R]. CP для [F] обмежений 70 (tier ≤ Close).
