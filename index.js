@@ -11,6 +11,7 @@ import { addMilestone, getMilestones, renderMilestonesHTML, createMilestoneFromA
 import { RelationGraph } from "./graph.js";
 import { applyRelationshipDecay, normalizeStats } from "./mechanics.js";
 import { initInfoblock, updateInfoblock } from "./infoblock.js";
+import { t, translateDOM, setUILanguage } from "./i18n.js";
 
 const extensionName = "sillytavern-relations-tracker";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
@@ -48,6 +49,7 @@ const defaultSettings = {
     smartScan: true,
     scanDepth: 10,
     promptLang: 'EN',
+    uiLang: 'EN',
     connectionProfile: '',
     debug: false,
     relations: {},
@@ -136,6 +138,31 @@ function saveRelations() {
 
 function loadRelationsFromSettings() {
     const settings = getSettings();
+    const promptLang = $('#rt-prompt-lang');
+    if (settings.promptLang) promptLang.val(settings.promptLang);
+    promptLang.off('change').on('change', function() {
+        settings.promptLang = $(this).val();
+        saveSettingsDebounced();
+        injectIntoPrompt();
+    });
+
+    const uiLang = $('#rt-ui-lang');
+    if (settings.uiLang) uiLang.val(settings.uiLang);
+    uiLang.off('change').on('change', function() {
+        settings.uiLang = $(this).val();
+        saveSettingsDebounced();
+        setUILanguage(settings.uiLang);
+        translateDOM(document.getElementById('relations_tracker_settings'));
+        const ib = document.getElementById('rt-infoblock-panel');
+        if(ib) translateDOM(ib);
+        renderCards();
+    });
+
+    // Apply translations initially
+    setUILanguage(settings.uiLang || 'EN');
+    translateDOM(document.getElementById('relations_tracker_settings'));
+    const ibInitial = document.getElementById('rt-infoblock-panel');
+    if(ibInitial) translateDOM(ibInitial);
     const chatKey = getChatKey();
     relationsData = chatKey && settings.relations?.[chatKey]
         ? JSON.parse(JSON.stringify(settings.relations[chatKey]))
@@ -728,7 +755,7 @@ function renderCards() {
     container.innerHTML = '';
 
     if (relationsData.length === 0) {
-        container.innerHTML = '<div class="rt-empty-state">No relationship data. Open a chat and click "Add" or "Scan Chat".</div>';
+        container.innerHTML = `<div class="rt-empty-state">${t('card.noData')}</div>`;
         return;
     }
 
@@ -937,7 +964,7 @@ function addRelationship() {
     const context = getContext();
     const charName = context?.name2 || "Character";
     const userName = context?.name1 || "User";
-    relationsData.push({ source: charName, target: userName, cp: 0, tier: "Neutral", bond: "[P]", label: "Just met", locked: false });
+    relationsData.push({ source: charName, target: userName, cp: 0, tier: "Neutral", bond: "[P]", label: t('card.justMet'), locked: false });
     renderCards(); injectIntoPrompt(); saveRelations();
 }
 
@@ -1030,6 +1057,8 @@ async function generateResume(data) {
         if (typeof toastr !== "undefined") toastr.warning("Select a Connection Profile to generate a resume.", "Relations Tracker");
         return;
     }
+
+    const promptLang = $('#rt-prompt-lang');
 
     const promptTemplate = resumePrompts[settings.promptLang] || resumePrompts['EN'];
     const lang = settings.promptLang || 'EN';

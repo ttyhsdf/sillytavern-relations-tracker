@@ -1,7 +1,7 @@
 <div class="extension_settings" id="relations_tracker_settings">
     <div class="inline-drawer">
         <div class="inline-drawer-toggle inline-drawer-header">
-            <b><i class="fa-solid fa-heart" style="color: #ff4b4b; margin-right: 5px;"></i> Relations Tracker</b>
+            <b><i class="fa-solid fa-heart" style="color: #ff4b4b; margin-right: 5px;"></i> <span data-i18n="settings.title">Relations Tracker</span></b>
             <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
         </div>
         <div class="inline-drawer-content" style="display: none;">
@@ -9,44 +9,52 @@
                 <!-- Settings -->
                 <div class="inline-drawer">
                     <div class="inline-drawer-toggle inline-drawer-header">
-                        <b><i class="fa-solid fa-gear" style="margin-right: 5px;"></i> Settings</b>
+                        <b><i class="fa-solid fa-gear" style="margin-right: 5px;"></i> <span data-i18n="settings.subtitle">Settings</span></b>
                         <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
                     </div>
                     <div class="inline-drawer-content rt-settings-section" style="display: none;">
-                        <label style="margin-bottom: 2px; font-weight: 600; font-size: 0.8em; color: var(--grey50);">AI MODE</label>
+                        <label style="margin-bottom: 2px; font-weight: 600; font-size: 0.8em; color: var(--grey50);" data-i18n="settings.aimode">AI MODE</label>
                         <div class="rt-mode-toggle">
-                            <button class="menu_button rt-mode-btn" data-mode="manual">Manual</button>
-                            <button class="menu_button rt-mode-btn active" data-mode="auto">Auto</button>
-                            <button class="menu_button rt-mode-btn" data-mode="hybrid">Hybrid</button>
+                            <button class="menu_button rt-mode-btn" data-mode="manual" data-i18n="settings.manual">Manual</button>
+                            <button class="menu_button rt-mode-btn active" data-mode="auto" data-i18n="settings.auto">Auto</button>
+                            <button class="menu_button rt-mode-btn" data-mode="hybrid" data-i18n="settings.hybrid">Hybrid</button>
                         </div>
                         <div class="rt-row" style="margin-top: 6px;">
-                            <label><input type="checkbox" id="rt-smart-scan" checked /> Smart Scan</label>
-                            <label><input type="checkbox" id="rt-debug" /> Debug</label>
+                            <label><input type="checkbox" id="rt-smart-scan" checked /> <span data-i18n="settings.smartScan">Smart Scan</span></label>
+                            <label><input type="checkbox" id="rt-debug" /> <span data-i18n="settings.debug">Debug</span></label>
                         </div>
                         <div class="inline-drawer" style="margin-top: 10px; margin-bottom: 5px;">
                             <div class="inline-drawer-toggle inline-drawer-header">
-                                <b><i class="fa-solid fa-flask" style="margin-right: 5px; color: #a29bfe;"></i> Advanced Mechanics</b>
+                                <b><i class="fa-solid fa-flask" style="margin-right: 5px; color: #a29bfe;"></i> <span data-i18n="settings.advMechanics">Advanced Mechanics</span></b>
                                 <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
                             </div>
                             <div class="inline-drawer-content" style="display: none; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 5px;">
                                 <label class="rt-toggle-row" title="Relationships cool down (decay by 3 CP) after 15 messages of no interaction">
                                     <input type="checkbox" id="rt-enable-decay" checked />
-                                    <span><b>Enable Decay</b> <small>(Inactive relations slowly drop)</small></span>
+                                    <span><b data-i18n="settings.enableDecay">Enable Decay</b> <small data-i18n="settings.enableDecay.desc">(Inactive relations slowly drop)</small></span>
                                 </label>
                                 <label class="rt-toggle-row" style="margin-top: 8px;" title="Track Trust and Lust as separate stats">
                                     <input type="checkbox" id="rt-enable-adv-stats" checked />
-                                    <span><b>Advanced Stats</b> <small>(Track Trust & Lust)</small></span>
+                                    <span><b data-i18n="settings.enableAdvStats">Advanced Stats</b> <small data-i18n="settings.enableAdvStats.desc">(Track Trust & Lust)</small></span>
                                 </label>
                             </div>
                         </div>
                         <div class="rt-row" style="margin-top: 5px;">
                             <div class="rt-field-group flex1">
-                                <label>Depth</label>
+                                <label data-i18n="settings.depth">Depth</label>
                                 <input type="number" class="text_pole" id="rt-scan-depth" value="10" min="1" max="100">
                             </div>
                             <div class="rt-field-group flex1">
-                                <label>Language</label>
+                                <label data-i18n="settings.promptLang">Prompt Lang</label>
                                 <select id="rt-prompt-lang" class="text_pole">
+                                    <option value="EN">EN</option>
+                                    <option value="RU">RU</option>
+                                    <option value="UK">UK</option>
+                                </select>
+                            </div>
+                            <div class="rt-field-group flex1">
+                                <label data-i18n="settings.uiLang">UI Lang</label>
+                                <select id="rt-ui-lang" class="text_pole">
                                     <option value="EN">EN</option>
                                     <option value="RU">RU</option>
                                     <option value="UK">UK</option>
@@ -55,7 +63,7 @@
                         </div>
                         <div class="rt-row" style="margin-top: 5px;">
                             <div class="rt-field-group" style="width: 100%;">
-                                <label>Connection Profile</label>
+                                <label data-i18n="settings.connProfile">Connection Profile</label>
                                 <select id="rt-connection-profile" class="text_pole">
                                     <option value="">-- Main API --</option>
                                 </select>
@@ -74,7 +82,7 @@
                 <!-- Custom Bonds -->
                 <div class="inline-drawer">
                     <div class="inline-drawer-toggle inline-drawer-header">
-                        <b><i class="fa-solid fa-link" style="margin-right: 5px;"></i> Custom Bonds</b>
+                        <b><i class="fa-solid fa-link" style="margin-right: 5px;"></i> <span data-i18n="settings.customBonds">Custom Bonds</span></b>
                         <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
                     </div>
                     <div class="inline-drawer-content rt-settings-section" style="display: none; padding-top: 10px;">
@@ -101,11 +109,10 @@
                     </div>
                     <div class="inline-drawer-content rt-settings-section" style="display: none;">
                         <div class="rt-row" style="margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
-                            <label style="margin-bottom: 0; font-weight: 600; font-size: 0.8em; color: var(--grey50);">NL MEMORY (MINI-LOREBOOK)</label>
+                            <label style="margin-bottom: 0; font-weight: 600; font-size: 0.8em; color: var(--grey50);" data-i18n="settings.resumeMode">NL MEMORY (MINI-LOREBOOK)</label>
                             <select id="rt-resume-length" class="text_pole" style="width: auto; padding: 2px 5px; font-size: 0.8em;">
-                                <option value="short">Short (1-2 sentences)</option>
-                                <option value="medium">Medium (2-3 sent. per char)</option>
-                                <option value="detailed">Detailed (Full paragraph per char)</option>
+                                <option value="short" data-i18n="settings.resumeMode.short">Short</option>
+                                <option value="detailed" data-i18n="settings.resumeMode.detailed">Detailed</option>
                             </select>
                         </div>
                         <div id="rt-nl-resume-cards" style="display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; padding-right: 5px;">
@@ -204,7 +211,7 @@
 
             <div class="rt-row">
                 <div class="rt-field-group" style="width: 100%;">
-                    <label>Label</label>
+                    <label data-i18n="card.label">Label</label>
                     <div class="rt-label-wrapper">
                         <input type="text" class="text_pole rt-label" placeholder="How they feel...">
                         <select class="rt-label-presets" title="Presets">
@@ -241,7 +248,7 @@
             <div class="rt-row">
                 <div class="rt-field-group" style="width: 100%;">
                     <div class="rt-cp-display">
-                        <label>CP</label>
+                        <label data-i18n="card.cp">CP</label>
                         <span class="rt-cp-value">0</span>
                     </div>
                     <input type="range" min="-100" max="100" value="0" class="rt-cp-slider">
@@ -252,14 +259,14 @@
                 <div class="rt-row flex-container">
                     <div class="rt-field-group flex1">
                         <div class="rt-cp-display">
-                            <label style="color: #70a1ff; font-weight: 600;">Trust</label>
+                            <label style="color: #70a1ff; font-weight: 600;" data-i18n="card.trust">Trust</label>
                             <span class="rt-trust-val" style="color: #70a1ff; font-weight:bold;">0</span>
                         </div>
                         <input type="range" min="-100" max="100" value="0" class="rt-cp-slider rt-trust-slider" style="--slider-color: #70a1ff;">
                     </div>
                     <div class="rt-field-group flex1">
                         <div class="rt-cp-display">
-                            <label style="color: #ff6b81; font-weight: 600;">Lust</label>
+                            <label style="color: #ff6b81; font-weight: 600;" data-i18n="card.lust">Lust</label>
                             <span class="rt-lust-val" style="color: #ff6b81; font-weight:bold;">0</span>
                         </div>
                         <input type="range" min="-100" max="100" value="0" class="rt-cp-slider rt-lust-slider" style="--slider-color: #ff6b81;">

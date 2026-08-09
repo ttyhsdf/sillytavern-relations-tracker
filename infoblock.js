@@ -1,3 +1,5 @@
+import { t } from "./i18n.js";
+
 export let isInfoblockVisible = false;
 let infoblockWrapper = null;
 let infoblockBtn = null;
@@ -88,7 +90,7 @@ export function updateInfoblock(relationsData, getBondColor, getSettings, getCon
     }
 
     if (!relationsData || relationsData.length === 0) {
-        infoblockContent.innerHTML = '<div style="color:var(--grey50); text-align:center; padding:10px;">No active relationships.</div>';
+        infoblockContent.innerHTML = `<div style="color:var(--grey50); text-align:center; padding:10px;">${t('card.noRelations')}</div>`;
         return;
     }
 
