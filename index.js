@@ -325,9 +325,17 @@ async function runAIAnalysis(force = false) {
 
         debugLog("AI Response:", result);
 
-        const jsonMatch = result.match(/\[\s*\{.*?\}\s*\]/s);
-        const jsonStr = jsonMatch ? jsonMatch[0] : result;
-        const newRelations = JSON.parse(jsonStr);
+        let jsonStr = result;
+        const jsonMatch = result.match(/\[[\s\S]*\]/);
+        if (jsonMatch) jsonStr = jsonMatch[0];
+        
+        let newRelations = [];
+        try {
+            newRelations = JSON.parse(jsonStr);
+        } catch (e) {
+            console.error("[RT] Failed to parse AI response as JSON. Response was:", result);
+            throw new Error("Invalid JSON from AI");
+        }
         if (!Array.isArray(newRelations)) return;
 
         // Normalize & validate against rules
@@ -1115,7 +1123,7 @@ async function generateResume(relationsData) {
         if (summary) {
             let parsedCards = [];
             try {
-                const match = summary.match(/\[([\s\S]*?)\]/);
+                const match = summary.match(/\[[\s\S]*\]/);
                 if (match) parsedCards = JSON.parse(match[0]);
                 else parsedCards = JSON.parse(summary);
             } catch(e) {
