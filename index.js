@@ -107,6 +107,7 @@ function saveSettings() {
         smartScan: $('#rt-smart-scan').prop('checked') ?? current.smartScan,
         scanDepth: parseInt($('#rt-scan-depth').val(), 10) || current.scanDepth || 10,
         promptLang: $('#rt-prompt-lang').val() || current.promptLang || 'EN',
+        uiLang: $('#rt-ui-lang').val() || current.uiLang || 'EN',
         connectionProfile: $('#rt-connection-profile').val() ?? current.connectionProfile ?? '',
         debug: $('#rt-debug').prop('checked') ?? current.debug,
         enableDecay: $('#rt-enable-decay').prop('checked') ?? current.enableDecay ?? true,
