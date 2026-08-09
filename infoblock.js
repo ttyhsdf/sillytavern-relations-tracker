@@ -104,8 +104,8 @@ export function updateInfoblock(relationsData, getBondColor, getSettings, getCon
         if (settings.enableAdvStats) {
             advStatsHtml = `
                 <div class="rt-ib-adv">
-                    <div class="rt-ib-adv-row"><span style="color:#70a1ff;">Tr</span> <span>${rel.trust || 0}</span></div>
-                    <div class="rt-ib-adv-row"><span style="color:#ff6b81;">Lu</span> <span>${rel.lust || 0}</span></div>
+                    <div class="rt-ib-adv-row"><span style="color:#70a1ff;">${t('card.trustAbbr')}</span> <span>${rel.trust || 0}</span></div>
+                    <div class="rt-ib-adv-row"><span style="color:#ff6b81;">${t('card.lustAbbr')}</span> <span>${rel.lust || 0}</span></div>
                 </div>
             `;
         }
@@ -123,8 +123,8 @@ export function updateInfoblock(relationsData, getBondColor, getSettings, getCon
                 </div>
                 <div class="rt-ib-stats">
                     <div class="rt-ib-main">
-                        <span class="rt-ib-tier">${escapeHtml(rel.tier || '')}</span>
-                        <span class="rt-ib-cp" style="color: ${bondColor}">${rel.cp} CP</span>
+                        <span class="rt-ib-tier">${escapeHtml(t('tier.' + rel.tier) || rel.tier || '')}</span>
+                        <span class="rt-ib-cp" style="color: ${bondColor}">${rel.cp} ${t('card.cp')}</span>
                     </div>
                     ${advStatsHtml}
                 </div>

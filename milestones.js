@@ -1,5 +1,7 @@
 export const MILESTONE_ICONS = ['🏆', '💕', '⚔', '🤝', '💔', '🔥', '❄', '🌟', '😢', '🎉', '👑', '🗡', '🛡', '💀', '🌹'];
 
+import { t } from "./i18n.js";
+
 export function formatTime(timestamp) {
     const d = new Date(timestamp);
     const pad = n => String(n).padStart(2, '0');
@@ -35,7 +37,7 @@ export function getMilestones(milestonesMap, pairKey) {
 
 export function renderMilestonesHTML(milestones) {
     if (!milestones || milestones.length === 0) {
-        return '<div class="rt-milestone-empty">No milestones recorded.</div>';
+        return `<div class="rt-milestone-empty">${t('settings.noMilestones')}</div>`;
     }
     
     return milestones.map(m => {

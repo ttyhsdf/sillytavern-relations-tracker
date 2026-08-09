@@ -771,6 +771,7 @@ function renderCards() {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.rt-card');
         card.dataset.index = index;
+        translateDOM(card);
 
         card.querySelector('.rt-source').textContent = rel.source;
         card.querySelector('.rt-target').textContent = rel.target;
@@ -1118,7 +1119,7 @@ function renderResumeCards(cards) {
     const container = document.getElementById('rt-nl-resume-cards');
     if (!container) return;
     if (!cards) {
-        container.innerHTML = '<div style="text-align:center;color:var(--grey50);font-size:0.8em;font-style:italic;padding:10px;">No character cards generated yet.</div>';
+        container.innerHTML = `<div style="text-align:center;color:var(--grey50);font-size:0.8em;font-style:italic;padding:10px;">${t('settings.noResumeCards')}</div>`;
         return;
     }
     if (typeof cards === 'string') {
@@ -1177,7 +1178,7 @@ function renderGallery() {
     all.sort((a, b) => b.timestamp - a.timestamp);
 
     if (all.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:var(--grey50);font-size:0.8em;">No milestones recorded yet.</div>';
+        container.innerHTML = `<div style="text-align:center;color:var(--grey50);font-size:0.8em;">${t('settings.noMilestones')}</div>`;
         return;
     }
     container.innerHTML = all.map(ms => {
