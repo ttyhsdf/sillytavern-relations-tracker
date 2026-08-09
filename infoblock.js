@@ -118,7 +118,7 @@ export function updateInfoblock(relationsData, getBondColor, getSettings, getCon
         html += `
             <div class="rt-ib-item" style="border-left-color: ${bondColor}">
                 <div class="rt-ib-names">
-                    <span>${escapeHtml(rel.source)} &harr; ${escapeHtml(rel.target)}</span>
+                    <span>${escapeHtml(rel.source)} &rarr; ${escapeHtml(rel.target)}</span>
                     ${statusHtml}
                 </div>
                 <div class="rt-ib-stats">

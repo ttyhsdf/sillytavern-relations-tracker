@@ -625,13 +625,12 @@ function applyChanges(newRelations, msgIndex) {
     for (const newRel of newRelations) {
         const pairKey = getPairKey(newRel.source, newRel.target);
 
-        // Handle milestones
         if (newRel.milestone?.event) {
             const ms = createMilestoneFromAI(newRel.milestone, msgIndex);
             addMilestone(milestonesMap, pairKey, ms);
-            changeSummary.push(`🏆 ${newRel.source}↔${newRel.target}`);
+            changeSummary.push(`🏆 ${newRel.source}→${newRel.target}`);
             if (getSettings().enableSystemMessages) {
-                pushSystemMessage(`[RT_EVENT] 🏆 Milestone: ${newRel.source} & ${newRel.target}: ${ms.event}`);
+                pushSystemMessage(`[RT_EVENT] 🏆 Milestone: ${newRel.source} → ${newRel.target}: ${ms.event}`);
             }
         }
         delete newRel.milestone;
@@ -645,9 +644,7 @@ function applyChanges(newRelations, msgIndex) {
         newRel.target = newRel.target.replace(/^[^\w]+|[^\w]+$/g, '').trim() || newRel.target;
 
         const oldIndex = mergedData.findIndex(r =>
-            // Match in either direction — AI may flip char_a/char_b
-            (r.source === newRel.source && r.target === newRel.target) ||
-            (r.source === newRel.target && r.target === newRel.source)
+            r.source === newRel.source && r.target === newRel.target
         );
         if (oldIndex !== -1) {
             const oldRel = mergedData[oldIndex];
@@ -657,7 +654,7 @@ function applyChanges(newRelations, msgIndex) {
                 const diff = newRel.cp - oldRel.cp;
                 if (diff !== 0) changeSummary.push(`${newRel.source} (${diff > 0 ? '+' : ''}${diff} CP)`);
                 if (oldRel.tier !== newRel.tier && getSettings().enableSystemMessages) {
-                    pushSystemMessage(`[RT_EVENT] ${newRel.source} & ${newRel.target} → ${newRel.tier}`);
+                    pushSystemMessage(`[RT_EVENT] ${newRel.source} → ${newRel.target} : ${newRel.tier}`);
                 }
             }
             newRel.locked = oldRel.locked || false;
@@ -673,7 +670,7 @@ function applyChanges(newRelations, msgIndex) {
             if (newRel.trust === undefined) newRel.trust = 0;
             if (newRel.lust === undefined) newRel.lust = 0;
             if (newRel.status === undefined) newRel.status = "";
-            changeSummary.push(`New: ${newRel.source}↔${newRel.target}`);
+            changeSummary.push(`New: ${newRel.source}→${newRel.target}`);
             mergedData.push(newRel);
         }
     }

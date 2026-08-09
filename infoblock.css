@@ -42,7 +42,8 @@
     pointer-events: auto;
     margin-top: 10px;
     width: 320px;
-    max-height: 80vh;
+    max-width: 90vw; /* Better for mobile */
+    max-height: calc(100vh - 120px); /* Leave room for header/footer on mobile */
     background: var(--SmartThemeBlurTintColor, rgba(15, 15, 20, 0.85));
     border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.15));
     border-radius: 12px;

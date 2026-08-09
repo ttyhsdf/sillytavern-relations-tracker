@@ -65,11 +65,11 @@ bond  — one of: [R] Romantic, [P] Platonic, [PL] Platonic Love, [F] Family, [H
 • [C] Complicated is a transitional state. Try to resolve it to another bond when evidence is clear.
 • [PL] Platonic Love is deep non-romantic devotion; it does NOT auto-transition to [R].{{CUSTOM_BONDS_RULES}}
 
-─── MULTI-CHARACTER & FACTIONS ───
+─── MULTI-CHARACTER & DIRECTED RELATIONSHIPS ───
 • Track ALL pairs that interact, not just User ↔ Character.
-• If two non-user characters interact meaningfully, add or update their pair entry.
-• FACTIONS: Automatically track relationships with Factions, Groups, or Guilds (e.g., 'City Guards', 'Mages Guild') if they are mentioned. Treat them as regular characters.
-• Use consistent name ordering (alphabetical by char_a) to avoid duplicates.
+• RELATIONSHIPS ARE DIRECTED (ONE-WAY). How Character A feels about Character B can be different from how Character B feels about Character A.
+• If BOTH characters' feelings change, you MUST generate TWO separate objects in the array (one for A->B and one for B->A).
+• FACTIONS: Automatically track relationships with Factions, Groups, or Guilds (e.g., 'City Guards') if they are mentioned.
 
 ─── MILESTONES ───
 • If a highly significant event occurred in this message (e.g. first meeting, first kiss, betrayal, saving a life), include a "milestone" object.
@@ -125,11 +125,11 @@ bond  — одно из: [R] Романтика, [P] Платоника, [PL] П
 • [C] Сложные — переходное состояние. Старайся разрешить его в другой тип, когда есть достаточно данных.
 • [PL] Платоническая любовь — глубокая неромантическая привязанность; НЕ переходит автоматически в [R].{{CUSTOM_BONDS_RULES}}
 
-─── МУЛЬТИПЕРСОНАЖИ И ФРАКЦИИ ───
-• Отслеживай ВСЕ пары, которые взаимодействуют, а не только Пользователь ↔ Персонаж.
-• Если два NPC-персонажа значимо взаимодействуют, добавь или обнови запись для их пары.
-• ФРАКЦИИ: Автоматически отслеживай отношения с Фракциями и Группами (например, 'Городская стража', 'Гильдия'), если они упоминаются. Относись к ним как к обычным персонажам.
-• Используй единый порядок имён (алфавитный по char_a), чтобы избежать дублей.
+─── МНОГО ПЕРСОНАЖЕЙ И ОДНОСТОРОННИЕ СВЯЗИ ───
+• Отслеживай ВСЕ пары, которые взаимодействуют, а не только User ↔ Персонаж.
+• ОТНОШЕНИЯ ЯВЛЯЮТСЯ ОДНОСТОРОННИМИ (НАПРАВЛЕННЫМИ). То, как Персонаж А относится к Персонажу Б, может отличаться от отношения Б к А.
+• Если чувства ОБИХ персонажей меняются, ты ДОЛЖЕН создать ДВА отдельных объекта в массиве (один для А->Б и один для Б->А).
+• ФРАКЦИИ: Автоматически отслеживай отношения с Фракциями, Группами или Гильдиями, если они упоминаются.
 
 ─── ЗНАЧИМЫЕ СОБЫТИЯ (MILESTONES) ───
 • Если в сообщении произошло важное событие (например, первая встреча, первый поцелуй, предательство, спасение жизни), добавь объект "milestone".
@@ -185,11 +185,11 @@ bond  — одне з: [R] Романтика, [P] Платоніка, [PL] Пл
 • [C] Складні — перехідний стан. Намагайся розв'язати його в інший тип, коли є достатньо даних.
 • [PL] Платонічне кохання — глибока неромантична відданість; НЕ переходит автоматически в [R].{{CUSTOM_BONDS_RULES}}
 
-─── МУЛЬТИПЕРСОНАЖІ ТА ФРАКЦІЇ ───
-• Відстежуй УСІ пари, що взаємодіють, а не лише Користувач ↔ Персонаж.
-• Якщо два NPC-персонажі значуще взаємодіють, додай або онови запис для їхньої пари.
-• ФРАКЦІЇ: Автоматично відстежуй стосунки з Фракціями та Групами (наприклад, 'Міська варта', 'Гільдія'), якщо вони згадуються. Стався до них як до звичайних персонажів.
-• Використовуй єдиний порядок імен (алфавітний за char_a), щоб уникнути дублів.
+─── БАГАТО ПЕРСОНАЖІВ ТА ОДНОСТОРОННІ ЗВ'ЯЗКИ ───
+• Відстежуй УСІ пари, що взаємодіють, а не тільки User ↔ Персонаж.
+• ВІДНОСИНИ Є ОДНОСТОРОННІМИ (НАПРАВЛЕНИМИ). Те, як Персонаж А ставиться до Персонажа Б, може відрізнятися від ставлення Б до А.
+• Якщо почуття ОБОХ персонажів змінюються, ти ПОВИНЕН створити ДВА окремі об'єкти в масиві (один для А->Б і один для Б->А).
+• ФРАКЦІЇ: Автоматично відстежуй відносини з Фракціями або Гільдіями, якщо вони згадуються.
 
 ─── ЗНАЧУЩІ ПОДІЇ (MILESTONES) ───
 • Якщо в повідомленні відбулася важлива подія (наприклад, перша зустріч, перший поцілунок, зрада, порятунок життя), додай об'єкт "milestone".
