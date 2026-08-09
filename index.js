@@ -375,13 +375,39 @@ function scanChatForRelations() {
     const settings = getSettings();
     const currentMsgCount = context.chat.length;
 
-    // Scan backwards for the most recent tag
+    // If we already have relations data from V2 settings, do NOT overwrite it with old chat tags.
+    // We only apply decay to the existing data.
+    if (relationsData.length > 0) {
+        if (settings.enableDecay) {
+            let changed = false;
+            for (const rel of relationsData) {
+                const lastInt = checkInteraction(context.chat, rel.source, rel.target, rel.lastInteractionMsg ?? 0);
+                if (lastInt > (rel.lastInteractionMsg ?? 0)) {
+                    rel.lastInteractionMsg = lastInt;
+                    changed = true;
+                }
+                const decayed = calculateDecay(rel, currentMsgCount);
+                if (decayed !== rel.cp && !rel.locked) {
+                    rel.cp = decayed;
+                    rel.tier = getTierFromCP(rel.cp);
+                    changed = true;
+                }
+            }
+            if (changed) saveRelations();
+        }
+        renderCards();
+        updateFloatingWidget();
+        injectIntoPrompt();
+        return;
+    }
+
+    // If relationsData is empty, try to migrate from V1 chat tags by scanning backwards
     for (let i = context.chat.length - 1; i >= 0; i--) {
         const msg = context.chat[i]?.mes;
         if (!msg) continue;
         const parsed = parseRelationsTag(msg);
         if (parsed) {
-            // Found tag — use it as base, then apply decay if enabled
+            // Found V1 tag — use it as base, then apply decay if enabled
             relationsData = parsed;
 
             if (settings.enableDecay) {
@@ -405,12 +431,11 @@ function scanChatForRelations() {
             renderCards();
             updateFloatingWidget();
             injectIntoPrompt();
-            return; // Done — don't fall through to settings load
+            return; // Done
         }
     }
 
-    // No tag in chat — fall back to settings (do NOT reset to [])
-    loadRelationsFromSettings();
+    // No settings data and no chat tags — leave as empty array.
 }
 
 function injectIntoPrompt() {
