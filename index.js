@@ -183,11 +183,13 @@ function scanChatForRelations() {
     const settings = getSettings();
     const currentMsgCount = context.chat.length;
 
+    let foundTag = false;
     for (let i = context.chat.length - 1; i >= 0; i--) {
         const msg = context.chat[i].mes;
         if (!msg) continue;
         const parsed = parseRelationsTag(msg);
         if (parsed) {
+            foundTag = true;
             relationsData = parsed;
             
             if (settings.enableDecay) {
@@ -224,6 +226,7 @@ function scanChatForRelations() {
             return;
         }
     }
+    if (!foundTag) relationsData = [];
 }
 
 function injectIntoPrompt() {
@@ -251,10 +254,10 @@ function injectIntoPrompt() {
 // =====================
 // AI Analysis
 // =====================
-async function runAIAnalysis() {
+async function runAIAnalysis(force = false) {
     const settings = getSettings();
-    if (settings.mode === 'manual') return;
-    if (isGenerating || relationsData.length === 0) return;
+    if (settings.mode === 'manual' && !force) return;
+    if (isGenerating) return;
 
     const context = getContext();
     if (!context?.chat?.length) return;
@@ -747,7 +750,11 @@ async function initUI() {
         $('#rt-prompt-lang, #rt-connection-profile, #rt-resume-length').on('change', saveSettings);
 
         document.getElementById('rt-add-btn').addEventListener('click', addRelationship);
-        document.getElementById('rt-refresh-btn').addEventListener('click', () => scanChatForRelations());
+        document.getElementById('rt-refresh-btn').addEventListener('click', async () => {
+            if (typeof toastr !== 'undefined') toastr.info("Scanning chat for relations...", "Relations Tracker");
+            scanChatForRelations();
+            await runAIAnalysis(true);
+        });
         document.getElementById('rt-export-btn').addEventListener('click', exportRelations);
         document.getElementById('rt-import-btn').addEventListener('click', () => document.getElementById('rt-import-file').click());
         document.getElementById('rt-import-file').addEventListener('change', (e) => {
@@ -851,6 +858,7 @@ async function initUI() {
                 let rawText = "";
                 if (typeof response === 'string') rawText = response;
                 else if (response && response.text) rawText = response.text;
+                else if (response && response.choices && response.choices[0] && response.choices[0].message) rawText = response.choices[0].message.content;
                 
                 let options = [];
                 try {
@@ -942,9 +950,32 @@ async function initUI() {
             const popup = document.getElementById('rt-graph-popup');
             if (popup) {
                 popup.style.display = 'flex';
+                if (typeof $ !== 'undefined' && $.fn.draggable && !$(popup).hasClass('ui-draggable')) {
+                    $(popup).draggable({ handle: '.rt-graph-header', containment: 'window' });
+                }
+                
                 if (graphInstance) graphInstance.destroy();
                 const canvas = document.getElementById('rt-graph-canvas');
+                
+                if (!popup.hasAttribute('data-ro-attached')) {
+                    const ro = new ResizeObserver(() => {
+                        if (popup.style.display !== 'none' && graphInstance) {
+                            canvas.width = popup.clientWidth;
+                            canvas.height = popup.clientHeight - popup.querySelector('.rt-graph-header').clientHeight;
+                            graphInstance.width = canvas.width;
+                            graphInstance.height = canvas.height;
+                            graphInstance.draw();
+                        }
+                    });
+                    ro.observe(popup);
+                    popup.setAttribute('data-ro-attached', 'true');
+                }
+                
+                canvas.width = popup.clientWidth;
+                canvas.height = popup.clientHeight - popup.querySelector('.rt-graph-header').clientHeight;
                 graphInstance = new RelationGraph(canvas, relationsData);
+                graphInstance.width = canvas.width;
+                graphInstance.height = canvas.height;
                 graphInstance.init();
             }
         });

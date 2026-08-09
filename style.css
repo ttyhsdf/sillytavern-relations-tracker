@@ -161,18 +161,21 @@
 /* Graph Popup          */
 /* ==================== */
 .rt-graph-popup {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    position: fixed; top: 10vh; left: 10vw;
     width: 80vw; max-width: 800px; height: 70vh; max-height: 600px;
     background: var(--SmartThemeBlurTintColor, rgba(20,20,20,0.95));
     border: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.2));
     border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
     z-index: 99999; display: flex; flex-direction: column;
+    resize: both; overflow: hidden;
 }
 .rt-graph-header {
     display: flex; justify-content: space-between; align-items: center;
     padding: 10px 16px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);
     font-weight: bold; color: var(--SmartThemeBodyColor, #fff);
+    cursor: grab;
 }
+.rt-graph-header:active { cursor: grabbing; }
 .rt-graph-close { cursor: pointer; color: var(--grey50, #aaa); transition: color 0.2s; padding: 15px; margin: -15px; }
 .rt-graph-close:hover { color: #ff4757; }
 #rt-graph-canvas { flex: 1; width: 100%; height: 100%; display: block; border-radius: 0 0 12px 12px; }
