@@ -10,6 +10,7 @@ import { checkInteraction, calculateDecay } from "./decay.js";
 import { addMilestone, getMilestones, renderMilestonesHTML, createMilestoneFromAI } from "./milestones.js";
 import { RelationGraph } from "./graph.js";
 import { applyRelationshipDecay, normalizeStats } from "./mechanics.js";
+import { initInfoblock, updateInfoblock } from "./infoblock.js";
 
 const extensionName = "sillytavern-relations-tracker";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
@@ -925,6 +926,8 @@ function renderCards() {
 
         container.appendChild(card);
     });
+
+    updateInfoblock(relationsData, getBondColor, getSettings);
 }
 
 // =====================
@@ -1166,6 +1169,15 @@ async function initUI() {
     try {
         const htmlResponse = await fetch(`${extensionFolderPath}/index.html`);
         if (!htmlResponse.ok) throw new Error("Failed to load index.html");
+        
+        // Load Infoblock CSS
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `${extensionFolderPath}/infoblock.css`;
+        document.head.appendChild(link);
+
+        // Initialize Infoblock HTML
+        await initInfoblock(extensionFolderPath);
         const htmlContent = await htmlResponse.text();
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlContent;
