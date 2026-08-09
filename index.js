@@ -252,6 +252,79 @@ function injectIntoPrompt() {
 }
 
 // =====================
+// JSON Extraction Utility
+// =====================
+/**
+ * Robust JSON array extractor. Tries multiple strategies in order:
+ * 1. Direct JSON.parse (model returned clean JSON)
+ * 2. Bracket-depth scan to find the first complete JSON array
+ * 3. Strip markdown fences then retry
+ * Returns the parsed array, or null on total failure.
+ */
+function extractAndParseRelations(raw) {
+    if (!raw || typeof raw !== 'string') return null;
+
+    // Normalize bond names the AI likes to write in full:
+    // e.g. "[P] Platonic" → "[P]", "[R] Romantic" → "[R]"
+    const bondMap = {
+        '[R] Romantic': '[R]', '[R]Romantic': '[R]',
+        '[P] Platonic': '[P]', '[P]Platonic': '[P]',
+        '[PL] Platonic Love': '[PL]', '[PL]Platonic Love': '[PL]',
+        '[F] Family': '[F]', '[F]Family': '[F]',
+        '[H] Hostile': '[H]', '[H]Hostile': '[H]',
+        '[C] Complicated': '[C]', '[C]Complicated': '[C]',
+    };
+    let text = raw;
+    for (const [full, short] of Object.entries(bondMap)) {
+        text = text.replaceAll(full, short);
+    }
+
+    // Strategy 1: direct parse (clean response)
+    try {
+        const parsed = JSON.parse(text.trim());
+        if (Array.isArray(parsed)) return parsed;
+    } catch (_) {}
+
+    // Strategy 2: find first '[' and walk brackets to find matching ']'
+    // This is reliable even when reasoning text surrounds the JSON
+    const start = text.indexOf('[');
+    if (start !== -1) {
+        let depth = 0;
+        let inString = false;
+        let escape = false;
+        for (let i = start; i < text.length; i++) {
+            const ch = text[i];
+            if (escape) { escape = false; continue; }
+            if (ch === '\\' && inString) { escape = true; continue; }
+            if (ch === '"') { inString = !inString; continue; }
+            if (inString) continue;
+            if (ch === '[' || ch === '{') depth++;
+            else if (ch === ']' || ch === '}') {
+                depth--;
+                if (depth === 0) {
+                    try {
+                        const candidate = text.slice(start, i + 1);
+                        const parsed = JSON.parse(candidate);
+                        if (Array.isArray(parsed)) return parsed;
+                    } catch (_) {}
+                    break;
+                }
+            }
+        }
+    }
+
+    // Strategy 3: strip markdown code fences
+    const stripped = text.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '').trim();
+    try {
+        const parsed = JSON.parse(stripped);
+        if (Array.isArray(parsed)) return parsed;
+    } catch (_) {}
+
+    // All strategies failed
+    return null;
+}
+
+// =====================
 // AI Analysis
 // =====================
 async function runAIAnalysis(force = false) {
@@ -332,23 +405,16 @@ async function runAIAnalysis(force = false) {
         debugLog("AI Response:", result);
 
         if (!result || !result.trim()) {
-            // Reasoning model used all tokens on thinking, content is empty
-            console.warn("[RT] AI returned empty content. Possibly a reasoning model that ran out of tokens for output. Increase max_tokens.");
-            if (typeof toastr !== "undefined") toastr.info("Relations Tracker: AI returned empty response. Try increasing max_tokens.", "Relations Tracker");
+            console.warn("[RT] AI returned empty content. Possibly a reasoning model that ran out of tokens. Increase max_tokens in Connection Profile.");
+            if (typeof toastr !== "undefined") toastr.info("RT: AI returned empty content. Increase max_tokens.", "Relations Tracker");
             return;
         }
 
-        let jsonStr = result;
-        const jsonMatch = result.match(/\[[\s\S]*\]/);
-        if (jsonMatch) jsonStr = jsonMatch[0];
-        
-        let newRelations = [];
-        try {
-            newRelations = JSON.parse(jsonStr);
-        } catch (e) {
-            console.error("[RT] Failed to parse AI response as JSON. Response was:", result);
-            if (typeof toastr !== "undefined") toastr.info("Relations Tracker: Could not parse AI response as JSON.", "Relations Tracker");
-            return; // Soft fail — don't throw, don't break anything
+        let newRelations = extractAndParseRelations(result);
+        if (newRelations === null) {
+            console.error("[RT] Could not extract valid JSON array from AI response:", result);
+            if (typeof toastr !== "undefined") toastr.info("Relations Tracker: Could not parse AI response. Check console.", "Relations Tracker");
+            return;
         }
         if (!Array.isArray(newRelations)) return;
 
@@ -356,6 +422,11 @@ async function runAIAnalysis(force = false) {
         for (const rel of newRelations) {
             if (rel.char_a) rel.source = rel.char_a;
             if (rel.char_b) rel.target = rel.char_b;
+            // Extract bond code if AI wrote full name e.g. "[P] Platonic" → "[P]"
+            if (rel.bond) {
+                const codeMatch = rel.bond.match(/^\[([A-Z]+)\]/);
+                if (codeMatch) rel.bond = `[${codeMatch[1]}]`;
+            }
             if (!VALID_BONDS.includes(rel.bond)) rel.bond = '[P]';
             rel.cp = Math.max(-100, Math.min(100, parseInt(rel.cp) || 0));
             rel.cp = clampCP(rel.bond, rel.cp);
