@@ -260,7 +260,7 @@ async function runAIAnalysis(force = false) {
     if (isGenerating) return;
 
     const context = getContext();
-    if (!context?.chat?.length) return;
+    if (!context?.chat?.length || context.chat.length < 2) return;
 
     const depth = settings.scanDepth;
     const recentMessages = settings.smartScan
@@ -315,8 +315,8 @@ async function runAIAnalysis(force = false) {
                     }
                 }
             } catch (connErr) {
-                console.warn("[RT] Connection Profile failed, falling back to Main API:", connErr);
-                result = await generateRaw({ prompt: recentMessages, systemPrompt: sysPrompt, quietToLoud: true });
+                console.warn("[RT] Connection Profile failed:", connErr);
+                throw new Error("Connection Profile API failed. Check API settings or logs.");
             }
         } else {
             debugLog("Using Main API");
