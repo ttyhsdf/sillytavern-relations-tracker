@@ -158,6 +158,35 @@
     </div>
 </div>
 
+<!-- Add Relationship Modal -->
+<div id="rt-add-modal" class="rt-popup" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center;">
+    <div style="background: var(--SmartThemeBlurTintColor, #1a1a1a); padding: 20px; border-radius: 12px; width: 400px; max-width: 90vw; border: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.1));">
+        <h3 style="margin-top:0; text-align:center; color: var(--SmartThemeBodyColor, #fff);" data-i18n="modal.add.title">Add Relationship</h3>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <label style="font-size: 0.8em; color: var(--grey50);" data-i18n="modal.add.source">Source</label>
+                <input type="text" id="rt-add-source" class="text_pole" style="width: 100%;">
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size: 0.8em; color: var(--grey50);" data-i18n="modal.add.target">Target</label>
+                <input type="text" id="rt-add-target" class="text_pole" style="width: 100%;">
+            </div>
+        </div>
+
+        <button id="rt-add-scan-btn" class="menu_button interactable" style="width: 100%; margin-bottom: 10px;">
+            <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="modal.add.scan">Find Characters (AI)</span>
+        </button>
+        
+        <div id="rt-add-chips" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; min-height: 20px;"></div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button id="rt-add-cancel" class="menu_button interactable" data-i18n="modal.add.cancel">Cancel</button>
+            <button id="rt-add-confirm" class="menu_button interactable" data-i18n="modal.add.confirm">Create</button>
+        </div>
+    </div>
+</div>
+
 <!-- Graph Popup -->
 <div id="rt-graph-popup" class="rt-graph-popup" style="display: none;">
     <div class="rt-graph-header">

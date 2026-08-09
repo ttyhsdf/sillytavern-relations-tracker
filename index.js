@@ -1,7 +1,7 @@
 import { extension_settings, getContext } from "../../../extensions.js";
 import { eventSource, event_types, generateRaw, saveSettingsDebounced, setExtensionPrompt, saveChatDebounced } from "../../../../script.js";
 import { ConnectionManagerRequestService } from "../../shared.js";
-import { systemPrompts, VALID_TIERS, VALID_BONDS, resumePrompts, customBondPrompt } from "./prompts.js";
+import { systemPrompts, VALID_TIERS, VALID_BONDS, resumePrompts, customBondPrompt, characterExtractionPrompt } from "./prompts.js";
 import { getTierFromCP, getTierLabel, getTierLabelsForBond } from "./tiers.js";
 import { ALL_BONDS, isTransitionAllowed, clampCP, updateCustomBonds, VALID_BONDS as RULES_VALID_BONDS } from "./rules.js";
 import { createHistoryEntry, addHistoryEntry, getPairKey, renderHistoryHTML } from "./history.js";
@@ -986,8 +986,116 @@ function addRelationship() {
     const context = getContext();
     const charName = context?.name2 || "Character";
     const userName = context?.name1 || "User";
-    relationsData.push({ source: charName, target: userName, cp: 0, tier: "Neutral", bond: "[P]", label: t('card.justMet'), locked: false });
-    renderCards(); injectIntoPrompt(); saveRelations();
+    
+    document.getElementById('rt-add-source').value = userName;
+    document.getElementById('rt-add-target').value = charName;
+    document.getElementById('rt-add-chips').innerHTML = ''; // clear chips
+    
+    document.getElementById('rt-add-modal').style.display = 'flex';
+}
+
+function closeAddModal() {
+    document.getElementById('rt-add-modal').style.display = 'none';
+}
+
+function confirmAddRelationship() {
+    const source = document.getElementById('rt-add-source').value.trim();
+    const target = document.getElementById('rt-add-target').value.trim();
+    if (!source || !target) {
+        if (typeof toastr !== "undefined") toastr.warning("Source and Target cannot be empty", "Relations Tracker");
+        return;
+    }
+    
+    // Check if already exists
+    const exists = relationsData.find(r => r.source === source && r.target === target);
+    if (exists) {
+        if (typeof toastr !== "undefined") toastr.warning("Relationship already exists", "Relations Tracker");
+        return;
+    }
+
+    relationsData.push({ source, target, cp: 0, tier: "Neutral", bond: "[P]", label: t('card.justMet'), locked: false });
+    renderCards(); 
+    injectIntoPrompt(); 
+    saveRelations();
+    closeAddModal();
+}
+
+let isScanningCharacters = false;
+async function scanCharactersAI() {
+    if (isScanningCharacters) return;
+    
+    const settings = getSettings();
+    const cp = settings.connectionProfile;
+    if (!cp) {
+        if (typeof toastr !== "undefined") toastr.warning("Select a Connection Profile to scan characters.", "Relations Tracker");
+        return;
+    }
+
+    const context = getContext();
+    if (!context?.chat?.length || context.chat.length < 2) {
+        if (typeof toastr !== "undefined") toastr.info("Not enough chat history to scan.", "Relations Tracker");
+        return;
+    }
+
+    const chatMessages = context.chat.filter(m => !m.is_system);
+    const depth = 20; // scan deep enough to get all characters
+    const recentMessages = fullScan(chatMessages, depth);
+
+    if (!recentMessages || !recentMessages.trim()) return;
+
+    const btn = document.getElementById('rt-add-scan-btn');
+    const chipsDiv = document.getElementById('rt-add-chips');
+    const originalText = btn.innerHTML;
+    
+    isScanningCharacters = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span data-i18n="modal.add.loading">${t('modal.add.loading') || 'Scanning...'}</span>`;
+    chipsDiv.innerHTML = '';
+    
+    const promptInstruction = characterExtractionPrompt[settings.promptLang] || characterExtractionPrompt['EN'];
+    const aiPrompt = `${promptInstruction}\n\nCHAT HISTORY:\n${recentMessages}`;
+
+    try {
+        const result = await ConnectionManagerRequestService.generateRaw(cp, aiPrompt);
+        let names = [];
+        
+        try {
+            names = JSON.parse(result.trim());
+        } catch (e) {
+            // fallback extraction if JSON fails
+            const match = result.match(/\[(.*?)\]/);
+            if (match) {
+                names = match[1].split(',').map(s => s.replace(/["']/g, '').trim()).filter(Boolean);
+            }
+        }
+        
+        if (!Array.isArray(names) || names.length === 0) {
+            if (typeof toastr !== "undefined") toastr.warning("AI couldn't find characters.", "Relations Tracker");
+        } else {
+            names.forEach(name => {
+                const chip = document.createElement('div');
+                chip.style.cssText = 'background: rgba(255,107,129,0.2); border: 1px solid #ff6b81; color: #ff6b81; padding: 4px 10px; border-radius: 12px; cursor: pointer; font-size: 0.85em; user-select: none; transition: background 0.2s;';
+                chip.textContent = name;
+                chip.addEventListener('mouseover', () => chip.style.background = 'rgba(255,107,129,0.4)');
+                chip.addEventListener('mouseout', () => chip.style.background = 'rgba(255,107,129,0.2)');
+                chip.addEventListener('click', () => {
+                    const activeInput = document.activeElement;
+                    if (activeInput && (activeInput.id === 'rt-add-source' || activeInput.id === 'rt-add-target')) {
+                        activeInput.value = name;
+                    } else {
+                        // Default to target if nothing is focused
+                        document.getElementById('rt-add-target').value = name;
+                    }
+                });
+                chipsDiv.appendChild(chip);
+            });
+        }
+    } catch (e) {
+        console.error("[RT] Error scanning characters:", e);
+        if (typeof toastr !== "undefined") toastr.error("Failed to scan characters.", "Relations Tracker");
+    } finally {
+        isScanningCharacters = false;
+        btn.innerHTML = originalText;
+    }
 }
 
 function exportRelations() {
@@ -1254,6 +1362,10 @@ async function initUI() {
 
         // Action buttons
         document.getElementById('rt-add-btn').addEventListener('click', addRelationship);
+        document.getElementById('rt-add-cancel').addEventListener('click', closeAddModal);
+        document.getElementById('rt-add-confirm').addEventListener('click', confirmAddRelationship);
+        document.getElementById('rt-add-scan-btn').addEventListener('click', scanCharactersAI);
+
         document.getElementById('rt-refresh-btn').addEventListener('click', async () => {
             if (typeof toastr !== 'undefined') toastr.info("Scanning chat...", "Relations Tracker");
             scanChatForRelations();

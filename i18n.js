@@ -81,6 +81,15 @@ const dictionaries = {
         
         // Graph
         'graph.title': 'Relationship Graph',
+        
+        // Add Modal
+        'modal.add.title': 'Add Relationship',
+        'modal.add.source': 'Source',
+        'modal.add.target': 'Target',
+        'modal.add.scan': 'Find Characters (AI)',
+        'modal.add.cancel': 'Cancel',
+        'modal.add.confirm': 'Create',
+        'modal.add.loading': 'Scanning...',
     },
     RU: {
         // Settings Panel
@@ -159,6 +168,15 @@ const dictionaries = {
         
         // Graph
         'graph.title': 'Граф Отношений',
+        
+        // Add Modal
+        'modal.add.title': 'Добавить отношения',
+        'modal.add.source': 'Кто',
+        'modal.add.target': 'К кому',
+        'modal.add.scan': 'Найти персонажей (ИИ)',
+        'modal.add.cancel': 'Отмена',
+        'modal.add.confirm': 'Создать',
+        'modal.add.loading': 'Сканирование...',
     },
     UK: {
         // Settings Panel
@@ -237,6 +255,15 @@ const dictionaries = {
         
         // Graph
         'graph.title': 'Граф Відносин',
+        
+        // Add Modal
+        'modal.add.title': 'Додати відносини',
+        'modal.add.source': 'Хто',
+        'modal.add.target': 'До кого',
+        'modal.add.scan': 'Знайти персонажів (ШІ)',
+        'modal.add.cancel': 'Скасувати',
+        'modal.add.confirm': 'Створити',
+        'modal.add.loading': 'Сканування...',
     }
 };
 

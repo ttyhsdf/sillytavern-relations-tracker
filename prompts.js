@@ -248,3 +248,12 @@ export const customBondPrompt = `The user is creating a new custom relationship 
 Write THREE DIFFERENT 1-sentence instructions for an AI tracking relationships on how to identify this bond type in a chat and how it behaves.
 Make them distinct (e.g. one focused on mutual feelings, one on power dynamics, one on actions).
 Respond ONLY with a JSON array of 3 strings. Example: ["Option 1", "Option 2", "Option 3"]`;
+
+export const characterExtractionPrompt = {
+    EN: `You are an entity extractor. Read the provided chat and return a JSON array of strings containing the unique names of EVERY character or distinct entity (including the user) present or actively mentioned in the scene.
+Output ONLY a JSON array, for example: ["Alice", "Bob", "Guard"]`,
+    RU: `Ты — извлекатель сущностей. Прочитай предоставленный чат и верни JSON-массив строк, содержащий уникальные имена КАЖДОГО персонажа или сущности (включая пользователя), присутствующих или активно упоминаемых в сцене.
+Выведи ТОЛЬКО JSON-массив, например: ["Alice", "Bob", "Стражник"]`,
+    UK: `Ти — екстрактор сутностей. Прочитай наданий чат і поверни JSON-масив рядків, що містить унікальні імена КОЖНОГО персонажа або сутності (включаючи користувача), присутніх або активно згаданих у сцені.
+Виведи ТІЛЬКИ JSON-масив, наприклад: ["Alice", "Bob", "Охоронець"]`
+};
