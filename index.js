@@ -793,17 +793,13 @@ function renderCards() {
         }
 
         // Advanced Stats
-        const advToggle = card.querySelector('.rt-adv-toggle');
         const advPanel = card.querySelector('.rt-adv-panel');
-        if (advToggle && advPanel) {
+        if (advPanel) {
             const settings = getSettings();
             if (!settings.enableAdvStats) {
-                advToggle.style.display = 'none';
                 advPanel.style.display = 'none';
             } else {
-                advToggle.addEventListener('click', () => {
-                    advPanel.style.display = advPanel.style.display === 'none' ? 'block' : 'none';
-                });
+                advPanel.style.display = 'block';
                 card.querySelector('.rt-trust-val').textContent = rel.trust || 0;
                 card.querySelector('.rt-trust-fill').style.width = Math.max(0, Math.min(100, ((rel.trust || 0) + 100) / 2)) + '%';
                 

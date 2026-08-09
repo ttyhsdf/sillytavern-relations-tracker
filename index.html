@@ -179,24 +179,11 @@
                 <div class="rt-status-badge" style="display: none;" title="Current Status/Mood"></div>
                 <span class="rt-bond-label" data-bond="[P]"></span>
                 <label class="rt-lock-label" title="Lock: AI cannot change bond type"><input type="checkbox" class="rt-lock" /> <i class="fa-solid fa-lock"></i></label>
-                <div class="rt-adv-toggle fa-solid fa-chart-bar" title="Advanced Stats"></div>
                 <div class="rt-history-toggle fa-solid fa-clock-rotate-left" title="History"></div>
                 <div class="rt-delete-btn fa-solid fa-trash" title="Delete"></div>
             </div>
         </div>
 
-        <div class="rt-adv-panel" style="display: none;">
-            <div class="rt-adv-content">
-                <div class="rt-stat-row">
-                    <div class="rt-stat-label">Trust <span class="rt-trust-val">0</span></div>
-                    <div class="rt-stat-bar-bg"><div class="rt-stat-bar-fill rt-trust-fill" style="width: 50%;"></div></div>
-                </div>
-                <div class="rt-stat-row">
-                    <div class="rt-stat-label">Lust <span class="rt-lust-val">0</span></div>
-                    <div class="rt-stat-bar-bg"><div class="rt-stat-bar-fill rt-lust-fill" style="width: 50%;"></div></div>
-                </div>
-            </div>
-        </div>
 
         <div class="rt-history-panel" style="display: none;">
             <div class="rt-history-content"><div class="rt-history-empty">No history yet.</div></div>
@@ -266,6 +253,21 @@
                         <span class="rt-cp-value">0</span>
                     </div>
                     <input type="range" min="-100" max="100" value="0" class="rt-cp-slider">
+                </div>
+            </div>
+            
+            <div class="rt-adv-panel" style="display: none;">
+                <div class="rt-adv-content" style="padding: 0; margin-top: 10px; gap: 6px;">
+                    <div class="rt-stat-row">
+                        <div class="rt-stat-label" style="width: 35px;">Trust</div>
+                        <div class="rt-stat-bar-bg"><div class="rt-stat-bar-fill rt-trust-fill" style="width: 50%;"></div></div>
+                        <span class="rt-trust-val" style="font-size:0.7em; font-weight:bold; width:20px; text-align:right;">0</span>
+                    </div>
+                    <div class="rt-stat-row">
+                        <div class="rt-stat-label" style="width: 35px;">Lust</div>
+                        <div class="rt-stat-bar-bg"><div class="rt-stat-bar-fill rt-lust-fill" style="width: 50%;"></div></div>
+                        <span class="rt-lust-val" style="font-size:0.7em; font-weight:bold; width:20px; text-align:right;">0</span>
+                    </div>
                 </div>
             </div>
         </div>
