@@ -24,6 +24,10 @@
                             <label><input type="checkbox" id="rt-debug" /> Debug</label>
                         </div>
                         <div class="rt-row" style="margin-top: 5px;">
+                            <label title="Relationships cool down (decay by 3 CP) after 15 messages of no interaction"><input type="checkbox" id="rt-enable-decay" checked /> Enable Decay</label>
+                            <label title="Track Trust and Lust as separate stats"><input type="checkbox" id="rt-enable-adv-stats" checked /> Adv. Stats</label>
+                        </div>
+                        <div class="rt-row" style="margin-top: 5px;">
                             <div class="rt-field-group flex1">
                                 <label>Depth</label>
                                 <input type="number" class="text_pole" id="rt-scan-depth" value="10" min="1" max="100">
@@ -160,10 +164,25 @@
                 <span class="rt-target" contenteditable="true" title="Click to edit">Target</span>
             </div>
             <div class="rt-card-actions">
+                <div class="rt-status-badge" style="display: none;" title="Current Status/Mood"></div>
                 <span class="rt-bond-label" data-bond="[P]"></span>
                 <label class="rt-lock-label" title="Lock: AI cannot change bond type"><input type="checkbox" class="rt-lock" /> <i class="fa-solid fa-lock"></i></label>
+                <div class="rt-adv-toggle fa-solid fa-chart-bar" title="Advanced Stats"></div>
                 <div class="rt-history-toggle fa-solid fa-clock-rotate-left" title="History"></div>
                 <div class="rt-delete-btn fa-solid fa-trash" title="Delete"></div>
+            </div>
+        </div>
+
+        <div class="rt-adv-panel" style="display: none;">
+            <div class="rt-adv-content">
+                <div class="rt-stat-row">
+                    <div class="rt-stat-label">Trust <span class="rt-trust-val">0</span></div>
+                    <div class="rt-stat-bar-bg"><div class="rt-stat-bar-fill rt-trust-fill" style="width: 50%;"></div></div>
+                </div>
+                <div class="rt-stat-row">
+                    <div class="rt-stat-label">Lust <span class="rt-lust-val">0</span></div>
+                    <div class="rt-stat-bar-bg"><div class="rt-stat-bar-fill rt-lust-fill" style="width: 50%;"></div></div>
+                </div>
             </div>
         </div>
 

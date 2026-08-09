@@ -9,6 +9,7 @@ import { smartScan, fullScan } from "./scanner.js";
 import { checkInteraction, calculateDecay } from "./decay.js";
 import { addMilestone, getMilestones, renderMilestonesHTML, createMilestoneFromAI } from "./milestones.js";
 import { RelationGraph } from "./graph.js";
+import { applyRelationshipDecay, normalizeStats } from "./mechanics.js";
 
 const extensionName = "sillytavern-relations-tracker";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
@@ -52,6 +53,7 @@ const defaultSettings = {
     history: {},
     milestones: {},
     enableDecay: true,
+    enableAdvStats: true,
     enableSystemMessages: false,
     customBonds: [],
     resumeLength: 'short',
@@ -84,6 +86,8 @@ function applySettingsToUI() {
     $('#rt-connection-profile').val(settings.connectionProfile);
     $('#rt-resume-length').val(settings.resumeLength || 'short');
     $('#rt-debug').prop('checked', settings.debug);
+    $('#rt-enable-decay').prop('checked', settings.enableDecay ?? true);
+    $('#rt-enable-adv-stats').prop('checked', settings.enableAdvStats ?? true);
     updateCustomBonds(settings.customBonds || []);
     loadRelationsFromSettings();
 }
@@ -102,6 +106,8 @@ function saveSettings() {
         promptLang: $('#rt-prompt-lang').val() || current.promptLang || 'EN',
         connectionProfile: $('#rt-connection-profile').val() ?? current.connectionProfile ?? '',
         debug: $('#rt-debug').prop('checked') ?? current.debug,
+        enableDecay: $('#rt-enable-decay').prop('checked') ?? current.enableDecay ?? true,
+        enableAdvStats: $('#rt-enable-adv-stats').prop('checked') ?? current.enableAdvStats ?? true,
         resumeLength: $('#rt-resume-length').val() || current.resumeLength || 'short',
     });
     saveSettingsDebounced();
@@ -521,8 +527,8 @@ async function runAIAnalysis(force = false) {
             }
             if (!VALID_BONDS.includes(rel.bond)) rel.bond = '[P]';
 
-            // CP clamping
-            rel.cp = Math.max(-100, Math.min(100, parseInt(rel.cp) || 0));
+            // Normalize new stats using mechanics
+            normalizeStats(rel);
             rel.cp = clampCP(rel.bond, rel.cp);
 
             // Tier is always derived from CP — never trust AI's tier value
@@ -604,13 +610,24 @@ function applyChanges(newRelations, msgIndex) {
             }
             newRel.locked = oldRel.locked || false;
             if (newRel.lastInteractionMsg === undefined) newRel.lastInteractionMsg = oldRel.lastInteractionMsg;
+            // Maintain advanced stats (if AI didn't return them, keep old values)
+            newRel.trust = newRel.trust !== undefined ? newRel.trust : (oldRel.trust !== undefined ? oldRel.trust : 0);
+            newRel.lust = newRel.lust !== undefined ? newRel.lust : (oldRel.lust !== undefined ? oldRel.lust : 0);
+            if (!newRel.status) newRel.status = oldRel.status || "";
+            
             mergedData[oldIndex] = newRel;
         } else {
             newRel.locked = false;
+            if (newRel.trust === undefined) newRel.trust = 0;
+            if (newRel.lust === undefined) newRel.lust = 0;
+            if (newRel.status === undefined) newRel.status = "";
             changeSummary.push(`New: ${newRel.source}↔${newRel.target}`);
             mergedData.push(newRel);
         }
     }
+
+    // Apply relationship decay to the whole roster
+    applyRelationshipDecay(mergedData, msgIndex, getSettings());
 
     relationsData = mergedData;
     renderCards();
@@ -773,6 +790,37 @@ function renderCards() {
             histToggle.addEventListener('click', () => {
                 histPanel.style.display = histPanel.style.display === 'none' ? 'block' : 'none';
             });
+        }
+
+        // Advanced Stats
+        const advToggle = card.querySelector('.rt-adv-toggle');
+        const advPanel = card.querySelector('.rt-adv-panel');
+        if (advToggle && advPanel) {
+            const settings = getSettings();
+            if (!settings.enableAdvStats) {
+                advToggle.style.display = 'none';
+                advPanel.style.display = 'none';
+            } else {
+                advToggle.addEventListener('click', () => {
+                    advPanel.style.display = advPanel.style.display === 'none' ? 'block' : 'none';
+                });
+                card.querySelector('.rt-trust-val').textContent = rel.trust || 0;
+                card.querySelector('.rt-trust-fill').style.width = Math.max(0, Math.min(100, ((rel.trust || 0) + 100) / 2)) + '%';
+                
+                card.querySelector('.rt-lust-val').textContent = rel.lust || 0;
+                card.querySelector('.rt-lust-fill').style.width = Math.max(0, Math.min(100, ((rel.lust || 0) + 100) / 2)) + '%';
+            }
+        }
+
+        // Status Badge
+        const statusBadge = card.querySelector('.rt-status-badge');
+        if (statusBadge) {
+            if (rel.status) {
+                statusBadge.textContent = rel.status;
+                statusBadge.style.display = 'block';
+            } else {
+                statusBadge.style.display = 'none';
+            }
         }
 
         // CP slider

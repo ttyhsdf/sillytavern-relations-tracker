@@ -1,0 +1,27 @@
+/* append to style.css */
+.rt-adv-toggle {
+    cursor: pointer; color: var(--grey50, #888);
+    transition: color 0.2s, transform 0.15s;
+    font-size: 0.85rem; padding: 2px;
+}
+.rt-adv-toggle:hover { color: #70a1ff; transform: scale(1.15); }
+
+.rt-adv-panel {
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.rt-adv-content { padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; }
+.rt-stat-row { display: flex; align-items: center; gap: 8px; }
+.rt-stat-label { width: 45px; font-size: 0.7em; text-transform: uppercase; font-weight: 600; color: var(--grey50, #aaa); display: flex; justify-content: space-between; }
+.rt-stat-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+.rt-stat-bar-fill { height: 100%; transition: width 0.3s; }
+.rt-trust-fill { background: #70a1ff; } /* Blue for trust */
+.rt-lust-fill { background: #ff6b81; }  /* Pink for lust */
+
+.rt-status-badge {
+    font-size: 0.65em; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;
+    background: rgba(255,255,255,0.1); color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 0 5px rgba(255,255,255,0.2);
+}

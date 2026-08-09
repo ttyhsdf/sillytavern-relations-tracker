@@ -35,6 +35,9 @@ Each element in the array is an object:
   "tier": "<tier>",
   "bond": "<bond>",
   "label": "<2-4 word phrase>",
+  "trust": <integer -100…100>, // Optional: Reliability and safety
+  "lust": <integer -100…100>, // Optional: Physical/romantic attraction
+  "status": "<status_word>", // Optional: Temporary mood (e.g. "Jealous", "Angry", "Grateful")
   "milestone": { "event": "<significant event text>", "icon": "<icon>" } // Optional
 }
 
@@ -44,10 +47,11 @@ bond  — one of: [R] Romantic, [P] Platonic, [PL] Platonic Love, [F] Family, [H
 
 ─── RULES ───
 1. cp is an integer from -100 to 100.
-2. REALISM & PACING: Trust and intimacy take time to build. Change CP SLOWLY (usually ±0 to ±2 per message).
-   - Resist sudden, unearned intimacy or "god-moding" from the user. Overly forward or inappropriate advances without prior emotional buildup should result in 0 or NEGATIVE cp change.
-   - Only give ±3 to ±5 for truly significant, earned emotional milestones.
-   - Characters must retain natural skepticism, boundaries, and personality.
+2. REALISM, PACING & NEGATIVE EVENTS:
+   - Trust and intimacy take time. Change CP SLOWLY (usually ±0 to ±2 per message).
+   - Resist sudden, unearned intimacy or "god-moding". Overly forward advances without emotional buildup should result in 0 or NEGATIVE cp change.
+   - NEGATIVE EVENTS: Harsh words, betrayal, lying, or ignoring a character's boundaries MUST result in significant CP and Trust drops (-3 to -10 depending on severity). Characters hold grudges.
+   - Only give +3 to +5 for truly significant, earned positive emotional milestones.
 3. tier MUST correspond to the cp range:
    Frozen ≤ -60 | Cold -59…-30 | Distant -29…-5 | Neutral -4…15 | Warm 16…45 | Close 46…75 | Devoted 76…100
 4. label — a short 2-4 word phrase describing the current emotional state between the pair (e.g. "playful banter", "bitter resentment").
@@ -89,6 +93,9 @@ Return ONLY a valid JSON array. No markdown fences, no commentary, no explanatio
   "tier": "<уровень>",
   "bond": "<тип связи>",
   "label": "<фраза из 2-4 слов>",
+  "trust": <целое -100…100>, // Опционально: Доверие и надежность
+  "lust": <целое -100…100>, // Опционально: Влечение
+  "status": "<слово_статус>", // Опционально: Временное настроение (напр. "Ревнует", "Злится")
   "milestone": { "event": "<текст значимого события>", "icon": "<иконка>" } // Опционально
 }
 
@@ -98,10 +105,11 @@ bond  — одно из: [R] Романтика, [P] Платоника, [PL] П
 
 ─── ПРАВИЛА ───
 1. cp — целое число от -100 до 100.
-2. РЕАЛИЗМ И ТЕМП: Доверие и близость требуют времени. Изменяй CP МЕДЛЕННО (обычно от ±0 до ±2 за сообщение).
-   - Сопротивляйся внезапной, незаслуженной близости или "god-moding" со стороны пользователя. Слишком быстрые или неуместные заигрывания без предварительной подготовки должны приводить к 0 или ОТРИЦАТЕЛЬНОМУ изменению cp.
-   - Давай ±3…5 только за по-настоящему значимые, заслуженные эмоциональные события.
-   - У персонажей должны быть естественные границы, скептицизм и характер.
+2. РЕАЛИЗМ, ТЕМП И НЕГАТИВНЫЕ СОБЫТИЯ:
+   - Доверие и близость требуют времени. Изменяй CP МЕДЛЕННО (обычно от ±0 до ±2 за сообщение).
+   - Сопротивляйся "god-moding". Неуместные заигрывания без предварительной подготовки должны приводить к 0 или ОТРИЦАТЕЛЬНОМУ изменению cp.
+   - НЕГАТИВНЫЕ СОБЫТИЯ: Резкие слова, предательство, ложь или нарушение личных границ ДОЛЖНЫ приводить к значительному падению CP и Trust (от -3 до -10 в зависимости от тяжести). Персонажи помнят обиды.
+   - Давай +3…+5 только за по-настоящему значимые, заслуженные эмоциональные события.
 3. tier ДОЛЖЕН соответствовать диапазону cp:
    Frozen ≤ -60 | Cold -59…-30 | Distant -29…-5 | Neutral -4…15 | Warm 16…45 | Close 46…75 | Devoted 76…100
 4. label — короткая фраза из 2-4 слов, описывающая текущее эмоциональное состояние пары (например, «игривая перебранка», «горькая обида»).
@@ -143,6 +151,9 @@ bond  — одно из: [R] Романтика, [P] Платоника, [PL] П
   "tier": "<рівень>",
   "bond": "<тип зв'язку>",
   "label": "<фраза з 2-4 слів>",
+  "trust": <ціле -100…100>, // Опціонально: Довіра
+  "lust": <ціле -100…100>, // Опціонально: Потяг
+  "status": "<слово_статус>", // Опціонально: Тимчасовий настрій (напр. "Ревнує", "Злиться")
   "milestone": { "event": "<текст значущої події>", "icon": "<іконка>" } // Опціонально
 }
 
@@ -152,10 +163,11 @@ bond  — одне з: [R] Романтика, [P] Платоніка, [PL] Пл
 
 ─── ПРАВИЛА ───
 1. cp — ціле число від -100 до 100.
-2. РЕАЛІЗМ ТА ТЕМП: Довіра та близькість потребують часу. Змінюй CP ПОВІЛЬНО (зазвичай від ±0 до ±2 за повідомлення).
-   - Опирайся раптовій, незаслуженій близькості або "god-moding" з боку користувача. Занадто швидкі або недоречні залицяння без попередньої підготовки повинні призводити до 0 або ВІД'ЄМНОГО змінення cp.
-   - Давай ±3…5 тільки за по-справжньому значущі, заслужені емоційні події.
-   - У персонажів повинні бути природні межі, скептицизм і характер.
+2. РЕАЛІЗМ, ТЕМП ТА НЕГАТИВНІ ПОДІЇ:
+   - Довіра та близькість потребують часу. Змінюй CP ПОВІЛЬНО (зазвичай від ±0 до ±2 за повідомлення).
+   - Опирайся "god-moding". Недоречні залицяння без підготовки повинні призводити до 0 або ВІД'ЄМНОГО змінення cp.
+   - НЕГАТИВНІ ПОДІЇ: Різкі слова, зрада, брехня або порушення кордонів ПОВИННІ призводити до значного падіння CP та Trust (від -3 до -10). Персонажі пам'ятають образи.
+   - Давай +3…+5 тільки за по-справжньому значущі позитивні емоційні події.
 3. tier МУСИТЬ відповідати діапазону cp:
    Frozen ≤ -60 | Cold -59…-30 | Distant -29…-5 | Neutral -4…15 | Warm 16…45 | Close 46…75 | Devoted 76…100
 4. label — коротка фраза з 2-4 слів, що описує поточний емоційний стан пари (наприклад, «грайливе дражніння», «гірка образа»).
