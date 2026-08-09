@@ -23,9 +23,21 @@
                             <label><input type="checkbox" id="rt-smart-scan" checked /> Smart Scan</label>
                             <label><input type="checkbox" id="rt-debug" /> Debug</label>
                         </div>
-                        <div class="rt-row" style="margin-top: 5px;">
-                            <label title="Relationships cool down (decay by 3 CP) after 15 messages of no interaction"><input type="checkbox" id="rt-enable-decay" checked /> Enable Decay</label>
-                            <label title="Track Trust and Lust as separate stats"><input type="checkbox" id="rt-enable-adv-stats" checked /> Adv. Stats</label>
+                        <div class="inline-drawer" style="margin-top: 10px; margin-bottom: 5px;">
+                            <div class="inline-drawer-toggle inline-drawer-header">
+                                <b><i class="fa-solid fa-flask" style="margin-right: 5px; color: #a29bfe;"></i> Advanced Mechanics</b>
+                                <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
+                            </div>
+                            <div class="inline-drawer-content" style="display: none; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 5px;">
+                                <label class="rt-toggle-row" title="Relationships cool down (decay by 3 CP) after 15 messages of no interaction">
+                                    <input type="checkbox" id="rt-enable-decay" checked />
+                                    <span><b>Enable Decay</b> <small>(Inactive relations slowly drop)</small></span>
+                                </label>
+                                <label class="rt-toggle-row" style="margin-top: 8px;" title="Track Trust and Lust as separate stats">
+                                    <input type="checkbox" id="rt-enable-adv-stats" checked />
+                                    <span><b>Advanced Stats</b> <small>(Track Trust & Lust)</small></span>
+                                </label>
+                            </div>
                         </div>
                         <div class="rt-row" style="margin-top: 5px;">
                             <div class="rt-field-group flex1">
