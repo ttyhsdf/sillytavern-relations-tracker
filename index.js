@@ -239,20 +239,61 @@ function extractAndParseRelations(raw) {
 
 
 /**
- * Extract a text response from any ConnectionManager response shape.
+ * Extract text content from any shape of response that ConnectionManagerRequestService might return.
+ * Logs all branches so we can debug in F12 console.
  */
 function extractTextFromResponse(response) {
-    if (!response) return '';
-    if (typeof response === 'string') return response.trim();
-    if (response.text) return String(response.text).trim();
+    if (!response) {
+        console.warn("[RT] extractTextFromResponse: response is null/undefined");
+        return '';
+    }
+
+    // Shape 1: plain string (some ST versions return text directly)
+    if (typeof response === 'string') {
+        console.log("[RT] Response shape: plain string, length:", response.length);
+        return response.trim();
+    }
+
+    // Shape 2: { text: "..." } — ST wraps extracted content
+    if (typeof response.text === 'string' && response.text.trim()) {
+        console.log("[RT] Response shape: { text }, length:", response.text.length);
+        return response.text.trim();
+    }
+
+    // Shape 3: OpenAI-style { choices: [{ message: { content, reasoning_content } }] }
     if (response.choices?.[0]?.message) {
         const msg = response.choices[0].message;
-        // Reasoning models may put content in reasoning_content if content is empty
-        const content = (msg.content && msg.content.trim()) ? msg.content : (msg.reasoning_content || '');
-        return content.trim();
+        console.log("[RT] Response shape: OpenAI choices[]. content length:", msg.content?.length, "reasoning length:", msg.reasoning_content?.length);
+
+        // Prefer content over reasoning_content
+        if (msg.content && msg.content.trim()) {
+            return msg.content.trim();
+        }
+        // Reasoning model returned empty content — fall back to reasoning_content
+        if (msg.reasoning_content && msg.reasoning_content.trim()) {
+            console.warn("[RT] content was empty, using reasoning_content as fallback");
+            return msg.reasoning_content.trim();
+        }
+        return '';
     }
+
+    // Shape 4: { content: "..." } — some wrappers
+    if (typeof response.content === 'string' && response.content.trim()) {
+        console.log("[RT] Response shape: { content }");
+        return response.content.trim();
+    }
+
+    // Shape 5: { message: { content } } — another possible wrapper
+    if (response.message?.content) {
+        console.log("[RT] Response shape: { message.content }");
+        return String(response.message.content).trim();
+    }
+
+    // Unknown — log it fully and stringify
+    console.warn("[RT] Unknown response shape:", JSON.stringify(response).substring(0, 500));
     return String(response).trim();
 }
+
 
 // =====================
 // Chat Tag Parsing
@@ -423,7 +464,7 @@ async function runAIAnalysis(force = false) {
                     settings.connectionProfile,
                     messages,
                     undefined,
-                    { stream: false, extractData: true }
+                    { stream: false } // No extractData — we extract manually for full control
                 );
             } catch (connErr) {
                 // Connection Profile failed — log and bail, DO NOT fall back to Main API
@@ -431,6 +472,8 @@ async function runAIAnalysis(force = false) {
                 if (typeof toastr !== "undefined") toastr.warning("RT: Connection Profile failed. Check API settings.", "Relations Tracker");
                 return;
             }
+            // Always log the raw response so users can debug in F12 console
+            console.log("[RT] Raw response from Connection Profile:", response);
             result = extractTextFromResponse(response);
         } else {
             debugLog("Using Main API");
