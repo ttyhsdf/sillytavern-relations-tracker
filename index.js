@@ -327,6 +327,8 @@ async function runAIAnalysis() {
 
         // Normalize & validate against rules
         for (const rel of newRelations) {
+            if (rel.char_a) rel.source = rel.char_a;
+            if (rel.char_b) rel.target = rel.char_b;
             if (!VALID_BONDS.includes(rel.bond)) rel.bond = '[P]';
             rel.cp = Math.max(-100, Math.min(100, parseInt(rel.cp) || 0));
             rel.cp = clampCP(rel.bond, rel.cp);
@@ -1028,10 +1030,26 @@ async function generateResume(relationsData) {
     if (!cp) return; 
     
     const promptTemplate = resumePrompts[settings.promptLang] || resumePrompts['EN'];
-    let lengthInstruction = "";
-    if (settings.resumeLength === 'short') lengthInstruction = "Keep it very brief (1-3 sentences total).";
-    else if (settings.resumeLength === 'medium') lengthInstruction = "Provide a moderate amount of detail (1 paragraph per major character).";
-    else if (settings.resumeLength === 'detailed') lengthInstruction = "Provide a highly detailed summary covering every nuanced relationship (2-3 sentences per character).";
+    const lang = settings.promptLang || 'EN';
+    const lengthDict = {
+        'EN': {
+            'short': "Keep it very brief (1-3 sentences total).",
+            'medium': "Provide a moderate amount of detail (1 paragraph per major character).",
+            'detailed': "Provide a highly detailed summary covering every nuanced relationship (2-3 sentences per character)."
+        },
+        'RU': {
+            'short': "Сделай это очень кратко (всего 1-3 предложения).",
+            'medium': "Предоставь умеренное количество деталей (1 абзац на каждого главного персонажа).",
+            'detailed': "Предоставь очень подробную сводку, охватывающую все нюансы отношений (2-3 предложения на персонажа)."
+        },
+        'UK': {
+            'short': "Зроби це дуже стисло (всього 1-3 речення).",
+            'medium': "Надай помірну кількість деталей (1 абзац на кожного головного персонажа).",
+            'detailed': "Надай дуже детальне зведення, що охоплює всі нюанси стосунків (2-3 речення на персонажа)."
+        }
+    };
+    const dict = lengthDict[lang] || lengthDict['EN'];
+    let lengthInstruction = dict[settings.resumeLength] || dict['short'];
     
     const prompt = promptTemplate
         .replace('{{RELATIONS_JSON}}', JSON.stringify(relationsData, null, 2))

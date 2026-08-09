@@ -72,6 +72,29 @@ export class RelationGraph {
         this.canvas.addEventListener('mousemove', this.onMouseMove);
         this.canvas.addEventListener('mouseup', this.onMouseUp);
         this.canvas.addEventListener('mouseleave', this.onMouseUp);
+
+        this.onTouchStart = this.handleTouchStart.bind(this);
+        this.onTouchMove = this.handleTouchMove.bind(this);
+        this.canvas.addEventListener('touchstart', this.onTouchStart, { passive: false });
+        this.canvas.addEventListener('touchmove', this.onTouchMove, { passive: false });
+        this.canvas.addEventListener('touchend', this.onMouseUp);
+    }
+    
+    handleTouchStart(e) {
+        if (e.touches.length > 0) {
+            e.clientX = e.touches[0].clientX;
+            e.clientY = e.touches[0].clientY;
+            this.handleMouseDown(e);
+        }
+    }
+    
+    handleTouchMove(e) {
+        if (e.touches.length > 0) {
+            if (e.cancelable) e.preventDefault();
+            e.clientX = e.touches[0].clientX;
+            e.clientY = e.touches[0].clientY;
+            this.handleMouseMove(e);
+        }
     }
     
     handleMouseDown(e) {
