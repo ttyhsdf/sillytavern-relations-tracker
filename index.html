@@ -72,9 +72,9 @@
                         <hr>
                         <div class="rt-row" style="margin-top: 10px;">
                             <div id="rt-install-regex-btn" class="menu_button interactable" style="width: 100%; text-align: center;">
-                                <i class="fa-solid fa-code"></i> Auto-Install Regex Rules
+                                <i class="fa-solid fa-code"></i> <span data-i18n="settings.autoRegex">Auto-Install Regex Rules</span>
                             </div>
-                            <small style="color: var(--grey50); display: block; text-align: center; margin-top: 5px;">Adds rules to beautifully format and hide system events.</small>
+                            <small style="color: var(--grey50); display: block; text-align: center; margin-top: 5px;" data-i18n="settings.autoRegex.desc">Adds rules to beautifully format and hide system events.</small>
                         </div>
                     </div>
                 </div>
@@ -88,14 +88,14 @@
                     <div class="inline-drawer-content rt-settings-section" style="display: none; padding-top: 10px;">
                         <div id="rt-custom-bonds-list" style="display: flex; flex-direction: column; gap: 5px; max-height: 150px; overflow-y: auto;"></div>
                         <div class="rt-row" style="margin-top: 10px; display: flex; gap: 5px;">
-                            <input type="text" id="rt-cb-code" class="text_pole" placeholder="[Tag]" style="flex: 1;" title="Tag, e.g. [M]">
-                            <input type="text" id="rt-cb-name" class="text_pole" placeholder="Name" style="flex: 2;" title="Display Name, e.g. Mentor">
+                            <input type="text" id="rt-cb-code" class="text_pole" placeholder="[Tag]" data-i18n="settings.cb.tagPlaceholder" style="flex: 1;" title="Tag, e.g. [M]">
+                            <input type="text" id="rt-cb-name" class="text_pole" placeholder="Name" data-i18n="settings.cb.namePlaceholder" style="flex: 2;" title="Display Name, e.g. Mentor">
                             <input type="color" id="rt-cb-color" value="#a29bfe" style="flex: 1; height: 30px; border: none; background: transparent; cursor: pointer;">
                             <button id="rt-cb-add" class="menu_button interactable" style="flex: 1;"><i class="fa-solid fa-plus"></i></button>
                         </div>
                         <div class="rt-row" style="margin-top: 5px; display: flex; gap: 5px;">
-                            <input type="text" id="rt-cb-behavior" class="text_pole" placeholder="Hint (or leave blank) -> click Generate" style="flex: 1;">
-                            <button id="rt-cb-generate" class="menu_button interactable" style="flex: 0 0 auto; white-space: nowrap; padding: 0 10px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate</button>
+                            <input type="text" id="rt-cb-behavior" class="text_pole" placeholder="Hint (or leave blank) -> click Generate" data-i18n="settings.cb.hintPlaceholder" style="flex: 1;">
+                            <button id="rt-cb-generate" class="menu_button interactable" style="flex: 0 0 auto; white-space: nowrap; padding: 0 10px;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="settings.cb.generate">Generate</span></button>
                         </div>
                         <div id="rt-cb-options" style="display: none; flex-direction: column; gap: 5px; margin-top: 5px;"></div>
                     </div>
@@ -104,7 +104,7 @@
                 <!-- Memory & Gallery -->
                 <div class="inline-drawer">
                     <div class="inline-drawer-toggle inline-drawer-header">
-                        <b><i class="fa-solid fa-book" style="margin-right: 5px;"></i> Memory & Gallery</b>
+                        <b><i class="fa-solid fa-book" style="margin-right: 5px;"></i> <span data-i18n="settings.memoryGallery">Memory & Gallery</span></b>
                         <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
                     </div>
                     <div class="inline-drawer-content rt-settings-section" style="display: none;">
@@ -116,23 +116,23 @@
                             </select>
                         </div>
                         <div id="rt-nl-resume-cards" style="display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; padding-right: 5px;">
-                            <div style="text-align: center; color: var(--grey50); font-size: 0.8em; font-style: italic; padding: 10px;">AI will generate character cards here...</div>
+                            <div style="text-align: center; color: var(--grey50); font-size: 0.8em; font-style: italic; padding: 10px;" data-i18n="settings.noResumeCards">AI will generate character cards here...</div>
                         </div>
                         
-                        <label style="margin-bottom: 2px; margin-top: 10px; font-weight: 600; font-size: 0.8em; color: var(--grey50);">MILESTONES GALLERY</label>
+                        <label style="margin-bottom: 2px; margin-top: 10px; font-weight: 600; font-size: 0.8em; color: var(--grey50);" data-i18n="settings.milestonesGallery">MILESTONES GALLERY</label>
                         <div id="rt-gallery-container" style="max-height: 250px; overflow-y: auto; background: var(--SmartThemeBlurTintColor, rgba(0,0,0,0.2)); border: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.1)); border-radius: 5px; padding: 8px;">
-                            <div style="text-align: center; color: var(--grey50); font-size: 0.8em;">No milestones recorded yet.</div>
+                            <div style="text-align: center; color: var(--grey50); font-size: 0.8em;" data-i18n="settings.noMilestones">No milestones recorded yet.</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Hybrid Banner -->
                 <div id="rt-hybrid-banner" class="rt-hybrid-banner" style="display: none;">
-                    <div class="rt-hybrid-title"><i class="fa-solid fa-robot"></i> AI Suggestion</div>
+                    <div class="rt-hybrid-title"><i class="fa-solid fa-robot"></i> <span data-i18n="settings.hybridSuggestion">AI Suggestion</span></div>
                     <div id="rt-hybrid-summary" class="rt-hybrid-summary"></div>
                     <div class="rt-hybrid-actions">
-                        <button id="rt-hybrid-apply" class="menu_button interactable rt-hybrid-apply"><i class="fa-solid fa-check"></i> Apply</button>
-                        <button id="rt-hybrid-dismiss" class="menu_button interactable rt-hybrid-dismiss"><i class="fa-solid fa-xmark"></i> Dismiss</button>
+                        <button id="rt-hybrid-apply" class="menu_button interactable rt-hybrid-apply"><i class="fa-solid fa-check"></i> <span data-i18n="settings.hybridApply">Apply</span></button>
+                        <button id="rt-hybrid-dismiss" class="menu_button interactable rt-hybrid-dismiss"><i class="fa-solid fa-xmark"></i> <span data-i18n="settings.hybridDismiss">Dismiss</span></button>
                     </div>
                 </div>
 
@@ -143,11 +143,11 @@
 
                 <!-- Bottom Controls -->
                 <div class="rt-controls">
-                    <button id="rt-add-btn" class="menu_button interactable"><i class="fa-solid fa-plus"></i> Add</button>
-                    <button id="rt-refresh-btn" class="menu_button interactable"><i class="fa-solid fa-rotate-right"></i> Scan</button>
-                    <button id="rt-graph-btn" class="menu_button interactable"><i class="fa-solid fa-diagram-project"></i> Graph</button>
-                    <button id="rt-export-btn" class="menu_button interactable"><i class="fa-solid fa-file-export"></i> Export</button>
-                    <button id="rt-import-btn" class="menu_button interactable"><i class="fa-solid fa-file-import"></i> Import</button>
+                    <button id="rt-add-btn" class="menu_button interactable"><i class="fa-solid fa-plus"></i> <span data-i18n="settings.addBtn">Add</span></button>
+                    <button id="rt-refresh-btn" class="menu_button interactable"><i class="fa-solid fa-rotate-right"></i> <span data-i18n="settings.scanBtn">Scan</span></button>
+                    <button id="rt-graph-btn" class="menu_button interactable"><i class="fa-solid fa-diagram-project"></i> <span data-i18n="settings.graphBtn">Graph</span></button>
+                    <button id="rt-export-btn" class="menu_button interactable"><i class="fa-solid fa-file-export"></i> <span data-i18n="settings.exportBtn">Export</span></button>
+                    <button id="rt-import-btn" class="menu_button interactable"><i class="fa-solid fa-file-import"></i> <span data-i18n="settings.importBtn">Import</span></button>
                 </div>
                 <input type="file" id="rt-import-file" accept=".json" style="display: none;">
             </div>

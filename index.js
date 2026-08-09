@@ -1147,7 +1147,7 @@ function renderCustomBonds() {
     if (!list) return;
     const cbs = getSettings().customBonds || [];
     if (cbs.length === 0) {
-        list.innerHTML = '<div style="text-align:center;color:var(--grey50);font-size:0.8em;">No custom bonds yet.</div>';
+        list.innerHTML = `<div style="text-align:center;color:var(--grey50);font-size:0.8em;">${t('settings.cb.noBonds')}</div>`;
         return;
     }
     list.innerHTML = cbs.map((cb, idx) => `
