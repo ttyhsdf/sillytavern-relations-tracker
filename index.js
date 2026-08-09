@@ -375,6 +375,9 @@ async function runAIAnalysis(force = false) {
 function applyChanges(newRelations, msgIndex) {
     let changeSummary = [];
     const context = getContext();
+    
+    let mergedData = [...relationsData];
+
     for (const newRel of newRelations) {
         const pairKey = getPairKey(newRel.source, newRel.target);
         
@@ -390,8 +393,9 @@ function applyChanges(newRelations, msgIndex) {
 
         newRel.lastInteractionMsg = checkInteraction(context?.chat || [], newRel.source, newRel.target, Math.max(0, msgIndex - 10));
 
-        const oldRel = relationsData.find(r => r.source === newRel.source && r.target === newRel.target);
-        if (oldRel) {
+        const oldIndex = mergedData.findIndex(r => r.source === newRel.source && r.target === newRel.target);
+        if (oldIndex !== -1) {
+            const oldRel = mergedData[oldIndex];
             const entry = createHistoryEntry(oldRel, newRel, msgIndex);
             if (entry) {
                 addHistoryEntry(historyMap, pairKey, entry);
@@ -406,18 +410,26 @@ function applyChanges(newRelations, msgIndex) {
             if (newRel.lastInteractionMsg === undefined) {
                 newRel.lastInteractionMsg = oldRel.lastInteractionMsg;
             }
+            mergedData[oldIndex] = newRel;
         } else {
             // New relationship pair detected by AI
             newRel.locked = false;
             changeSummary.push(`New: ${newRel.source}→${newRel.target}`);
+            mergedData.push(newRel);
         }
     }
-    relationsData = newRelations;
+    
+    relationsData = mergedData;
     renderCards();
     injectIntoPrompt();
     saveRelations();
-    if (changeSummary.length > 0 && typeof toastr !== "undefined") {
-        toastr.success(`${changeSummary.join(', ')}`, "Relations Tracker");
+    
+    if (typeof toastr !== "undefined") {
+        if (changeSummary.length > 0) {
+            toastr.success(`${changeSummary.join(', ')}`, "Relations Tracker");
+        } else {
+            toastr.info("Scan complete. No relation updates found.", "Relations Tracker");
+        }
     }
 }
 
