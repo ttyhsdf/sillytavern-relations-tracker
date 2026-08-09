@@ -71,9 +71,12 @@ export function updateInfoblock(relationsData, getBondColor, getSettings, getCon
             // Scan backwards up to 5 messages to find the latest time tag
             for (let i = context.chat.length - 1; i >= Math.max(0, context.chat.length - 5); i--) {
                 const msg = context.chat[i];
-                if (msg && msg.mes && msg.is_user === false) { // AI message
-                    // Look for **MM/DD • HH/MM • Location • ...**
-                    const match = msg.mes.match(/\*\*(.*?•.*?•.*?)\*\*/);
+                if (msg && msg.mes) {
+                    // Look for **... • ...** or *... • ...* or [... • ...] with bullets, middots, or pipes
+                    let match = msg.mes.match(/(?:\*\*|\*)([^\*]+?(?:•|·|\|)[^\*]+?)(?:\*\*|\*)/);
+                    if (!match) {
+                        match = msg.mes.match(/\[([^\]]+?(?:•|·|\|)[^\]]+?)\]/);
+                    }
                     if (match && match[1]) {
                         worldStateEl.textContent = match[1].trim();
                         worldStateEl.style.display = 'block';
