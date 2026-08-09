@@ -308,6 +308,8 @@ async function runAIAnalysis(force = false) {
                         result = response;
                     } else if (response.text) {
                         result = response.text;
+                    } else if (response.choices && response.choices[0] && response.choices[0].message) {
+                        result = response.choices[0].message.content;
                     } else {
                         result = String(response);
                     }
@@ -1096,6 +1098,7 @@ async function generateResume(relationsData) {
         let summary = "";
         if (typeof response === 'string') summary = response.trim();
         else if (response && response.text) summary = response.text.trim();
+        else if (response && response.choices && response.choices[0] && response.choices[0].message) summary = response.choices[0].message.content.trim();
         
         if (summary) {
             let parsedCards = [];
