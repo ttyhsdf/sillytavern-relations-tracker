@@ -309,10 +309,16 @@ async function runAIAnalysis(force = false) {
                     } else if (response.text) {
                         result = response.text;
                     } else if (response.choices && response.choices[0] && response.choices[0].message) {
-                        result = response.choices[0].message.content;
+                        // Some reasoning models return empty content but populate reasoning_content
+                        const msg = response.choices[0].message;
+                        result = (msg.content && msg.content.trim()) 
+                            ? msg.content 
+                            : (msg.reasoning_content || '');
                     } else {
                         result = String(response);
                     }
+                    // Trim whitespace
+                    if (typeof result === 'string') result = result.trim();
                 }
             } catch (connErr) {
                 console.warn("[RT] Connection Profile failed:", connErr);
@@ -325,6 +331,13 @@ async function runAIAnalysis(force = false) {
 
         debugLog("AI Response:", result);
 
+        if (!result || !result.trim()) {
+            // Reasoning model used all tokens on thinking, content is empty
+            console.warn("[RT] AI returned empty content. Possibly a reasoning model that ran out of tokens for output. Increase max_tokens.");
+            if (typeof toastr !== "undefined") toastr.info("Relations Tracker: AI returned empty response. Try increasing max_tokens.", "Relations Tracker");
+            return;
+        }
+
         let jsonStr = result;
         const jsonMatch = result.match(/\[[\s\S]*\]/);
         if (jsonMatch) jsonStr = jsonMatch[0];
@@ -334,7 +347,8 @@ async function runAIAnalysis(force = false) {
             newRelations = JSON.parse(jsonStr);
         } catch (e) {
             console.error("[RT] Failed to parse AI response as JSON. Response was:", result);
-            throw new Error("Invalid JSON from AI");
+            if (typeof toastr !== "undefined") toastr.info("Relations Tracker: Could not parse AI response as JSON.", "Relations Tracker");
+            return; // Soft fail — don't throw, don't break anything
         }
         if (!Array.isArray(newRelations)) return;
 
@@ -369,9 +383,8 @@ async function runAIAnalysis(force = false) {
             showHybridBanner(newRelations, msgIndex);
         } else {
             applyChanges(newRelations, msgIndex);
-            if (newRelations.length > 0) {
-                await generateResume(relationsData);
-            }
+            // generateResume is intentionally NOT called here in auto mode.
+            // It is expensive (extra API call). Run it manually via the UI button.
         }
 
     } catch (err) {
@@ -1182,7 +1195,14 @@ jQuery(async () => {
     
     setTimeout(() => scanChatForRelations(), 1000);
     if (eventSource) {
-        eventSource.on(event_types.MESSAGE_RECEIVED, async () => { scanChatForRelations(); await runAIAnalysis(); });
+        // Use GENERATION_ENDED so RT runs strictly AFTER the main API finishes, never during.
+        const generationDoneEvent = event_types.GENERATION_ENDED || event_types.MESSAGE_RECEIVED;
+        eventSource.on(generationDoneEvent, async () => {
+            scanChatForRelations();
+            // Small delay to ensure SillyTavern has fully written the message to context
+            await new Promise(r => setTimeout(r, 500));
+            await runAIAnalysis();
+        });
         eventSource.on(event_types.CHAT_CHANGED, () => { loadRelationsFromSettings(); scanChatForRelations(); });
     }
 });
