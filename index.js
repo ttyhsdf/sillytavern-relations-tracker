@@ -369,7 +369,9 @@ async function runAIAnalysis(force = false) {
             showHybridBanner(newRelations, msgIndex);
         } else {
             applyChanges(newRelations, msgIndex);
-            await generateResume(newRelations);
+            if (newRelations.length > 0) {
+                await generateResume(relationsData);
+            }
         }
 
     } catch (err) {
