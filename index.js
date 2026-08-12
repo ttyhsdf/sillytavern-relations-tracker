@@ -477,9 +477,12 @@ async function runAIAnalysis(force = false) {
     if (chatMessages.length < 2) return;
 
     const depth = settings.scanDepth || 10;
+    const userName = context?.name1 || 'User';
+    const charName = context?.name2 || 'Character';
+
     const recentMessages = settings.smartScan
-        ? smartScan(chatMessages, depth)
-        : fullScan(chatMessages, depth);
+        ? smartScan(chatMessages, depth, userName, charName)
+        : fullScan(chatMessages, depth, userName, charName);
 
     if (!recentMessages || !recentMessages.trim()) return;
 
@@ -1039,7 +1042,9 @@ async function scanCharactersAI() {
 
     const chatMessages = context.chat.filter(m => !m.is_system);
     const depth = 20; // scan deep enough to get all characters
-    const recentMessages = fullScan(chatMessages, depth);
+    const userName = context?.name1 || 'User';
+    const charName = context?.name2 || 'Character';
+    const recentMessages = fullScan(chatMessages, depth, userName, charName);
 
     if (!recentMessages || !recentMessages.trim()) return;
 

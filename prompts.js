@@ -49,6 +49,7 @@ bond  — one of: [R] Romantic, [P] Platonic, [PL] Platonic Love, [F] Family, [H
 1. cp is an integer from -100 to 100.
 2. OBJECTIVITY & PACING:
    - Base your evaluation STRICTLY on the actual actions and dialogue in the provided chat history. Ignore any prior character tags, definitions, or meta-knowledge if they contradict the current interaction.
+   - NAME RESOLUTION: Always use the character's ACTUAL proper name. Do NOT use aliases, roles, or generic placeholders like "User", "Mom", "Dad", "Boss", "Player", or "You". Resolve these to their real names.
    - If one character insists on a relationship but the other denies, pushes away, or avoids them, this is UNREQUITED or conflict. Do NOT classify it as a mutual romantic bond (e.g. soulmate). Treat it as [C] Complicated, [H] Hostile, or reduce CP.
    - Trust and intimacy take time. Change CP SLOWLY (usually ±0 to ±2 per message).
    - Resist sudden, unearned intimacy or "god-moding". Overly forward advances without emotional buildup should result in 0 or NEGATIVE cp change.
@@ -109,6 +110,7 @@ bond  — одно из: [R] Романтика, [P] Платоника, [PL] П
 1. cp — целое число от -100 до 100.
 2. ОБЪЕКТИВНОСТЬ И ТЕМП:
    - Оценивай отношения СТРОГО на основе реальных действий и диалогов в предоставленной истории чата. Игнорируй любые теги персонажей или их изначальное описание, если они противоречат текущему взаимодействию.
+   - ИМЕНА: Всегда используй РЕАЛЬНОЕ собственное имя персонажа. НЕ используй псевдонимы, роли или общие слова вроде "User", "Mom", "Мама", "Папа", "Босс" или "Ты". Заменяй их на настоящие имена.
    - Если один персонаж настаивает на отношениях, а другой отвергает, убегает или избегает его — это БЕЗОТВЕТНАЯ симпатия или конфликт. НЕ классифицируй это как взаимную романтику. Используй [C] Complicated, [H] Hostile или снижай CP.
    - Доверие и близость требуют времени. Меняй CP МЕДЛЕННО (обычно от ±0 до ±2 за сообщение).
    - Сопротивляйся внезапной, незаслуженной близости или "богомодству". Слишком наглые приставания без эмоциональной базы должны приводить к 0 или ОТРИЦАТЕЛЬНОМУ изменению cp.
@@ -169,6 +171,7 @@ bond  — одне з: [R] Романтика, [P] Платоніка, [PL] Пл
 1. cp — ціле число від -100 до 100.
 2. ОБ'ЄКТИВНІСТЬ ТА ТЕМП:
    - Оцінюй відносини СУВОРО на основі реальних дій та діалогів у наданій історії чату. Ігноруй будь-які теги персонажів або їхній початковий опис, якщо вони суперечать поточній взаємодії.
+   - ІМЕНА: Завжди використовуй РЕАЛЬНЕ власне ім'я персонажа. НЕ використовуй псевдоніми, ролі або загальні слова на кшталт "User", "Mom", "Мама", "Тато", "Бос" або "Ти". Замінюй їх на справжні імена.
    - Якщо один персонаж наполягає на стосунках, а інший відкидає, тікає або уникає його — це НЕВЗАЄМНА симпатія або конфлікт. НЕ класифікуй це як взаємну романтику. Використовуй [C] Complicated, [H] Hostile або знижуй CP.
    - Довіра та близькість вимагають часу. Змінюй CP ПОВІЛЬНО (зазвичай від ±0 до ±2 за повідомлення).
    - Опирайся раптовій, незаслуженій близькості або "богомодству". Занадто нахабні залицяння без емоційної бази повинні призводити до 0 або НЕГАТИВНОЇ зміни cp.
@@ -250,10 +253,13 @@ Make them distinct (e.g. one focused on mutual feelings, one on power dynamics, 
 Respond ONLY with a JSON array of 3 strings. Example: ["Option 1", "Option 2", "Option 3"]`;
 
 export const characterExtractionPrompt = {
-    EN: `You are an entity extractor. Read the provided chat and return a JSON array of strings containing the unique names of EVERY character or distinct entity (including the user) present or actively mentioned in the scene.
+    EN: `You are an entity extractor. Read the provided chat and return a JSON array of strings containing the unique names of EVERY character or distinct entity present or actively mentioned in the scene.
+Resolve roles/aliases (e.g. "User", "Mom", "Boss", "Player") to their ACTUAL proper names. Do not use generic placeholders.
 Output ONLY a JSON array, for example: ["Alice", "Bob", "Guard"]`,
-    RU: `Ты — извлекатель сущностей. Прочитай предоставленный чат и верни JSON-массив строк, содержащий уникальные имена КАЖДОГО персонажа или сущности (включая пользователя), присутствующих или активно упоминаемых в сцене.
+    RU: `Ты — извлекатель сущностей. Прочитай предоставленный чат и верни JSON-массив строк, содержащий уникальные имена КАЖДОГО персонажа или сущности, присутствующих или активно упоминаемых в сцене.
+Заменяй роли и псевдонимы (например, "User", "Mom", "Мама", "Игрок") на их РЕАЛЬНЫЕ собственные имена. Не используй общие слова.
 Выведи ТОЛЬКО JSON-массив, например: ["Alice", "Bob", "Стражник"]`,
-    UK: `Ти — екстрактор сутностей. Прочитай наданий чат і поверни JSON-масив рядків, що містить унікальні імена КОЖНОГО персонажа або сутності (включаючи користувача), присутніх або активно згаданих у сцені.
+    UK: `Ти — екстрактор сутностей. Прочитай наданий чат і поверни JSON-масив рядків, що містить унікальні імена КОЖНОГО персонажа або сутності, присутніх або активно згаданих у сцені.
+Замінюй ролі та псевдоніми (наприклад, "User", "Mom", "Мама", "Гравець") на їхні РЕАЛЬНІ власні імена. Не використовуй загальні слова.
 Виведи ТІЛЬКИ JSON-масив, наприклад: ["Alice", "Bob", "Охоронець"]`
 };

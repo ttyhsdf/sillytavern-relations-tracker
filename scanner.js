@@ -18,13 +18,13 @@ function isSystemMessage(msg) {
     return false;
 }
 
-export function smartScan(chatMessages, depth) {
+export function smartScan(chatMessages, depth, userName = 'User', charName = 'Character') {
     const messages = chatMessages
         .filter(m => !isSystemMessage(m))
         .slice(-depth);
 
     return messages.map(m => {
-        const name = m.is_user ? 'User' : (m.name || 'Character');
+        const name = m.is_user ? (m.name || userName) : (m.name || charName);
         let text = m.mes || '';
 
         // Strip HTML tags
@@ -50,12 +50,12 @@ export function smartScan(chatMessages, depth) {
     }).filter(line => line.length > 10).join('\n\n');
 }
 
-export function fullScan(chatMessages, depth) {
+export function fullScan(chatMessages, depth, userName = 'User', charName = 'Character') {
     return chatMessages
         .filter(m => !isSystemMessage(m))
         .slice(-depth)
         .map(m => {
-            const name = m.is_user ? 'User' : (m.name || 'Character');
+            const name = m.is_user ? (m.name || userName) : (m.name || charName);
             let text = (m.mes || '').replace(/<!--RELATIONS_ARCHIVE:.*?-->/s, '').trim();
             return `${name}: ${text}`;
         })
