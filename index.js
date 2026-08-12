@@ -1060,7 +1060,17 @@ async function scanCharactersAI() {
     const aiPrompt = `${promptInstruction}\n\nCHAT HISTORY:\n${recentMessages}`;
 
     try {
-        const result = await ConnectionManagerRequestService.generateRaw(cp, aiPrompt);
+        const messages = [
+            { role: "system", content: "You are an entity extractor." },
+            { role: "user", content: aiPrompt }
+        ];
+        const response = await ConnectionManagerRequestService.sendRequest(
+            cp,
+            messages,
+            undefined,
+            { stream: false }
+        );
+        const result = extractTextFromResponse(response);
         let names = [];
         
         try {
