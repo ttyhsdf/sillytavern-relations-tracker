@@ -210,6 +210,15 @@ function extractAndParseRelations(raw) {
         .replace(/"(\[H\])\s*Hostile"/g, '"$1"')
         .replace(/"(\[C\])\s*Complicated"/g, '"$1"');
 
+    // Strip markdown fences
+    text = text.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '');
+
+    // Strip // comments (commonly hallucinated by LLMs copying the schema), requiring whitespace before // to avoid matching http://
+    text = text.replace(/\s+\/\/.*$/gm, '');
+
+    // Strip trailing commas
+    text = text.replace(/,(?=\s*[}\]])/g, '');
+
     // Strategy 1: direct parse (clean response)
     try {
         const p = JSON.parse(text.trim());

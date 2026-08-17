@@ -35,10 +35,10 @@ Each element in the array is an object:
   "tier": "<tier>",
   "bond": "<bond>",
   "label": "<2-4 word phrase>",
-  "trust": <integer -100…100>, // Optional: Reliability and safety
-  "lust": <integer -100…100>, // Optional: Physical/romantic attraction
-  "status": "<status_word>", // Optional: Temporary mood (e.g. "Jealous", "Angry", "Grateful")
-  "milestone": { "event": "<significant event text>", "icon": "<icon>" } // Optional
+  "trust": <integer -100…100>,
+  "lust": <integer -100…100>,
+  "status": "<status_word>",
+  "milestone": { "event": "<significant event text>", "icon": "<icon>" }
 }
 
 ─── VALID VALUES ───
@@ -77,7 +77,8 @@ bond  — one of: [R] Romantic, [P] Platonic, [PL] Platonic Love, [F] Family, [H
 • Icons allowed: 🏆, 💕, ⚔, 🤝, 💔, 🔥, ❄, 🌟, 😢, 🎉, 👑, 🗡, 🛡, 💀, 🌹
 
 ─── OUTPUT ───
-Return ONLY a valid JSON array. No markdown fences, no commentary, no explanation.`,
+Return ONLY a valid JSON array. No markdown fences, no commentary, no explanation.
+Do NOT use double quotes inside your string values (use single quotes instead).`,
 
     /* ------------------------------------------------------------------ */
     /*  RUSSIAN                                                           */
@@ -96,10 +97,10 @@ Return ONLY a valid JSON array. No markdown fences, no commentary, no explanatio
   "tier": "<уровень>",
   "bond": "<тип связи>",
   "label": "<фраза из 2-4 слов>",
-  "trust": <целое -100…100>, // Опционально: Доверие и надежность
-  "lust": <целое -100…100>, // Опционально: Влечение
-  "status": "<слово_статус>", // Опционально: Временное настроение (напр. "Ревнует", "Злится")
-  "milestone": { "event": "<текст значимого события>", "icon": "<иконка>" } // Опционально
+  "trust": <целое -100…100>,
+  "lust": <целое -100…100>,
+  "status": "<слово_статус>",
+  "milestone": { "event": "<текст значимого события>", "icon": "<иконка>" }
 }
 
 ─── ДОПУСТИМЫЕ ЗНАЧЕНИЯ ───
@@ -138,7 +139,8 @@ bond  — одно из: [R] Романтика, [P] Платоника, [PL] П
 • Допустимые иконки: 🏆, 💕, ⚔, 🤝, 💔, 🔥, ❄, 🌟, 😢, 🎉, 👑, 🗡, 🛡, 💀, 🌹
 
 ─── ВЫВОД ───
-Верни ТОЛЬКО валидный JSON-массив. Без markdown-блоков, без комментариев, без пояснений.`,
+Верни ТОЛЬКО валидный JSON-массив. Без markdown-блоков, без комментариев, без пояснений.
+НЕ используй двойные кавычки внутри текстовых значений (используй одинарные).`,
 
     /* ------------------------------------------------------------------ */
     /*  UKRAINIAN                                                         */
@@ -157,10 +159,10 @@ bond  — одно из: [R] Романтика, [P] Платоника, [PL] П
   "tier": "<рівень>",
   "bond": "<тип зв'язку>",
   "label": "<фраза з 2-4 слів>",
-  "trust": <ціле -100…100>, // Опціонально: Довіра
-  "lust": <ціле -100…100>, // Опціонально: Потяг
-  "status": "<слово_статус>", // Опціонально: Тимчасовий настрій (напр. "Ревнує", "Злиться")
-  "milestone": { "event": "<текст значущої події>", "icon": "<іконка>" } // Опціонально
+  "trust": <ціле -100…100>,
+  "lust": <ціле -100…100>,
+  "status": "<слово_статус>",
+  "milestone": { "event": "<текст значущої події>", "icon": "<іконка>" }
 }
 
 ─── ДОПУСТИМІ ЗНАЧЕННЯ ───
@@ -199,7 +201,8 @@ bond  — одне з: [R] Романтика, [P] Платоніка, [PL] Пл
 • Допустимі іконки: 🏆, 💕, ⚔, 🤝, 💔, 🔥, ❄, 🌟, 😢, 🎉, 👑, 🗡, 🛡, 💀, 🌹
 
 ─── ВИВІД ───
-Поверни ТІЛЬКИ валідний JSON-масив. Без markdown-блоків, без коментарів, без пояснень.`,
+Поверни ТІЛЬКИ валідний JSON-масив. Без markdown-блоків, без коментарів, без пояснень.
+НЕ використовуй подвійні лапки всередині текстових значень (використовуй одинарні).`,
 };
 
 export const resumePrompts = {
