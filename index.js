@@ -269,12 +269,45 @@ function extractAndParseRelations(raw) {
         return best;
     }
 
-    // Strategy 3: strip markdown fences then retry
-    const stripped = text.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '').trim();
-    try {
-        const p = JSON.parse(stripped);
-        if (Array.isArray(p)) return p;
-    } catch (_) {}
+    // Strategy 3: Object-level extraction (resilient to cut-off arrays)
+    // If the array was cut off due to max_tokens, Strategy 2 fails. 
+    // We can still salvage any complete { ... } objects that were generated before the cutoff.
+    const objects = [];
+    scanFrom = 0;
+    while (scanFrom < text.length) {
+        const start = text.indexOf('{', scanFrom);
+        if (start === -1) break;
+
+        let depth = 0, inStr = false, esc = false;
+        let found = false;
+        for (let i = start; i < text.length; i++) {
+            const ch = text[i];
+            if (esc) { esc = false; continue; }
+            if (ch === '\\' && inStr) { esc = true; continue; }
+            if (ch === '"') { inStr = !inStr; continue; }
+            if (inStr) continue;
+            if (ch === '{') depth++;
+            else if (ch === '}') {
+                depth--;
+                if (depth === 0) {
+                    try {
+                        const p = JSON.parse(text.slice(start, i + 1));
+                        if (p !== null && typeof p === 'object' && ('char_a' in p || 'source' in p)) {
+                            objects.push(p);
+                        }
+                    } catch (_) {}
+                    scanFrom = i + 1;
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (!found) break; // no matching brace found, hit cutoff
+    }
+
+    if (objects.length > 0) {
+        return objects;
+    }
 
     return null;
 }
