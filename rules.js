@@ -3,8 +3,8 @@
  * @description Bond type rules, constraints, and transition logic for the Relations Tracker extension.
  */
 
-/** All recognized bond types with display metadata. */
-export let ALL_BONDS = [
+/** Base recognized bond types with display metadata. */
+const BASE_BONDS = [
     { code: '[R]',  name: 'Romantic',       emoji: '💋', color: '#ff6b81' },
     { code: '[P]',  name: 'Platonic',       emoji: '🤝', color: '#7bed9f' },
     { code: '[PL]', name: 'Platonic Love',  emoji: '💛', color: '#ffd32a' },
@@ -13,9 +13,8 @@ export let ALL_BONDS = [
     { code: '[C]',  name: 'Complicated',    emoji: '🌀', color: '#a29bfe' },
 ];
 
-export let VALID_BONDS = ALL_BONDS.map(b => b.code);
-
-export const BOND_RULES = {
+/** Base transition rules, keyed by bond code. */
+const BASE_RULES = {
     '[F]': {
         cpCap: 70,
         blockedTransitions: ['[R]'],
@@ -84,56 +83,73 @@ export const BOND_RULES = {
     },
 };
 
+function cloneRules(rules) {
+    const out = {};
+    for (const key of Object.keys(rules)) {
+        const r = rules[key];
+        out[key] = {
+            cpCap: r.cpCap,
+            blockedTransitions: [...r.blockedTransitions],
+            allowedTransitions: [...r.allowedTransitions],
+            transitionConditions: { ...r.transitionConditions },
+        };
+    }
+    return out;
+}
+
+/** All recognized bond types with display metadata (base + custom). */
+export let ALL_BONDS = BASE_BONDS.map(b => ({ ...b }));
+
+export let VALID_BONDS = ALL_BONDS.map(b => b.code);
+
+export const BOND_RULES = cloneRules(BASE_RULES);
+
 export function updateCustomBonds(customBondsArray) {
-    // Reset to base
-    ALL_BONDS = [
-        { code: '[R]',  name: 'Romantic',       emoji: '💋', color: '#ff6b81' },
-        { code: '[P]',  name: 'Platonic',       emoji: '🤝', color: '#7bed9f' },
-        { code: '[PL]', name: 'Platonic Love',  emoji: '💛', color: '#ffd32a' },
-        { code: '[F]',  name: 'Family',         emoji: '🏠', color: '#70a1ff' },
-        { code: '[H]',  name: 'Hostile',        emoji: '⚔', color: '#ff4757' },
-        { code: '[C]',  name: 'Complicated',    emoji: '🌀', color: '#a29bfe' },
-    ];
-    
-    if (Array.isArray(customBondsArray)) {
-        for (const cb of customBondsArray) {
-            ALL_BONDS.push({
-                code: cb.code,
-                name: cb.name,
-                emoji: cb.emoji || '✨',
-                color: cb.color || '#ffffff',
-                behavior: cb.behavior || '',
-                isCustom: true
-            });
-            
-            // Add loose rule for custom bonds (can transition anywhere)
-            BOND_RULES[cb.code] = {
-                cpCap: null,
-                blockedTransitions: [],
-                allowedTransitions: ['[R]', '[P]', '[PL]', '[F]', '[H]', '[C]'], // Plus other customs implicitly handled below
-                transitionConditions: {
-                    '[R]': () => true, '[P]': () => true, '[PL]': () => true, 
-                    '[F]': () => true, '[H]': () => true, '[C]': () => true
-                }
-            };
+    // Fully reset bonds and rules, then rebuild from base + customs.
+    ALL_BONDS = BASE_BONDS.map(b => ({ ...b }));
+
+    for (const key of Object.keys(BOND_RULES)) {
+        delete BOND_RULES[key];
+    }
+    Object.assign(BOND_RULES, cloneRules(BASE_RULES));
+
+    const customs = Array.isArray(customBondsArray) ? customBondsArray : [];
+
+    for (const cb of customs) {
+        const code = String(cb.code || '').trim().toUpperCase();
+        ALL_BONDS.push({
+            code: code,
+            name: cb.name,
+            emoji: cb.emoji || '✨',
+            color: cb.color || '#ffffff',
+            behavior: cb.behavior || '',
+            isCustom: true
+        });
+
+        // Add loose rule for custom bonds (can transition anywhere)
+        BOND_RULES[code] = {
+            cpCap: null,
+            blockedTransitions: [],
+            allowedTransitions: ['[R]', '[P]', '[PL]', '[F]', '[H]', '[C]'],
+            transitionConditions: {
+                '[R]': () => true, '[P]': () => true, '[PL]': () => true,
+                '[F]': () => true, '[H]': () => true, '[C]': () => true
+            }
+        };
+    }
+
+    // Make transitions symmetric: every rule may transition to/from every custom bond.
+    const customCodes = customs.map(cb => String(cb.code || '').trim().toUpperCase());
+    for (const ruleKey of Object.keys(BOND_RULES)) {
+        const rule = BOND_RULES[ruleKey];
+        for (const code of customCodes) {
+            if (!rule.allowedTransitions.includes(code)) {
+                rule.allowedTransitions.push(code);
+                rule.transitionConditions[code] = () => true;
+            }
         }
     }
-    
-    // Add custom bonds to allowed transitions of base bonds so they can transition back and forth
-    const customCodes = (customBondsArray || []).map(cb => cb.code);
-    for (const ruleKey in BOND_RULES) {
-        if (!BOND_RULES[ruleKey].isCustomRuleUpdated) {
-             const rule = BOND_RULES[ruleKey];
-             for (const code of customCodes) {
-                 if (!rule.allowedTransitions.includes(code)) {
-                     rule.allowedTransitions.push(code);
-                     rule.transitionConditions[code] = () => true;
-                 }
-             }
-             rule.isCustomRuleUpdated = true;
-        }
-    }
-    
+
     VALID_BONDS = ALL_BONDS.map(b => b.code);
 }
 
@@ -146,8 +162,7 @@ export function isTransitionAllowed(fromBond, toBond, cp) {
     if (!rule) return true; // Custom bonds without explicit block
 
     if (rule.blockedTransitions.includes(toBond)) return false;
-    
-    // Custom to Custom is always allowed
+
     if (!rule.allowedTransitions.includes(toBond)) return false;
 
     const condition = rule.transitionConditions[toBond];

@@ -1,3 +1,5 @@
+import { getDecayRate } from "./decay.js";
+
 /**
  * @file mechanics.js
  * @description Advanced relationship game mechanics (Decay, Trust/Lust normalization).
@@ -12,12 +14,12 @@
 export function applyRelationshipDecay(relationsData, currentMsgIndex, settings) {
     if (!settings.enableDecay) return;
 
-    const decayInterval = 15; // Messages required for decay
-    const decayAmount = 3;    // CP to lose per interval
-
     for (const rel of relationsData) {
-        if (!rel.lastInteractionMsg) continue;
+        if (typeof rel.lastInteractionMsg !== 'number') continue;
         if (rel.locked) continue; // Don't decay locked relationships
+
+        const rate = getDecayRate(rel.bond);
+        if (rate.threshold === null) continue; // Family / Platonic Love never decay
 
         // Initialize lastDecayMsg if it doesn't exist
         if (rel.lastDecayMsg === undefined) {
@@ -31,25 +33,26 @@ export function applyRelationshipDecay(relationsData, currentMsgIndex, settings)
 
         const msgsSinceDecay = currentMsgIndex - rel.lastDecayMsg;
 
-        if (msgsSinceDecay >= decayInterval) {
-            const decayTicks = Math.floor(msgsSinceDecay / decayInterval);
-            
+        if (msgsSinceDecay >= rate.threshold) {
+            const decayTicks = Math.floor(msgsSinceDecay / rate.threshold);
+            const totalAmount = rate.amount * decayTicks;
+
             // Move CP towards 0
             if (rel.cp > 0) {
-                rel.cp = Math.max(0, rel.cp - (decayAmount * decayTicks));
+                rel.cp = Math.max(0, rel.cp - totalAmount);
             } else if (rel.cp < 0) {
-                rel.cp = Math.min(0, rel.cp + (decayAmount * decayTicks));
+                rel.cp = Math.min(0, rel.cp + totalAmount);
             }
 
             // Also decay Trust and Lust if they exist
             if (rel.trust !== undefined && rel.trust > 0) {
-                rel.trust = Math.max(0, rel.trust - (decayAmount * decayTicks));
+                rel.trust = Math.max(0, rel.trust - totalAmount);
             }
             if (rel.lust !== undefined && rel.lust > 0) {
-                rel.lust = Math.max(0, rel.lust - (decayAmount * decayTicks));
+                rel.lust = Math.max(0, rel.lust - totalAmount);
             }
 
-            rel.lastDecayMsg += decayTicks * decayInterval;
+            rel.lastDecayMsg += decayTicks * rate.threshold;
         }
     }
 }
@@ -59,23 +62,21 @@ export function applyRelationshipDecay(relationsData, currentMsgIndex, settings)
  * @param {Object} rel - The relationship object returned by AI
  */
 export function normalizeStats(rel) {
-    // Clamp CP
+    // Clamp CP; default to 0 if missing/non-numeric
     if (typeof rel.cp === 'number') {
         rel.cp = Math.max(-100, Math.min(100, rel.cp));
+    } else {
+        rel.cp = 0;
     }
 
-    // Clamp Trust
+    // Clamp Trust — leave undefined if missing so callers can preserve old values
     if (typeof rel.trust === 'number') {
         rel.trust = Math.max(-100, Math.min(100, rel.trust));
-    } else {
-        rel.trust = 0; // Default if missing
     }
 
-    // Clamp Lust
+    // Clamp Lust — leave undefined if missing so callers can preserve old values
     if (typeof rel.lust === 'number') {
         rel.lust = Math.max(-100, Math.min(100, rel.lust));
-    } else {
-        rel.lust = 0; // Default if missing
     }
 
     // Status formatting

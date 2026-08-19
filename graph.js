@@ -20,6 +20,7 @@ export class RelationGraph {
         
         this.dragNode = null;
         this.hoverEdge = null;
+        this.hoverNode = null;
         this.tooltipParams = null; // {x, y, text, visible}
         
         this.initData();

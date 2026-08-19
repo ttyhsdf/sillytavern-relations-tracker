@@ -1,7 +1,7 @@
 import { extension_settings, getContext } from "../../../extensions.js";
 import { eventSource, event_types, generateRaw, saveSettingsDebounced, setExtensionPrompt, saveChatDebounced } from "../../../../script.js";
 import { ConnectionManagerRequestService } from "../../shared.js";
-import { systemPrompts, VALID_TIERS, VALID_BONDS, resumePrompts, customBondPrompt, characterExtractionPrompt } from "./prompts.js";
+import { systemPrompts, VALID_TIERS, resumePrompts, customBondPrompt, characterExtractionPrompt } from "./prompts.js";
 import { getTierFromCP, getTierLabel, getTierLabelsForBond } from "./tiers.js";
 import { ALL_BONDS, isTransitionAllowed, clampCP, updateCustomBonds, VALID_BONDS as RULES_VALID_BONDS } from "./rules.js";
 import { createHistoryEntry, addHistoryEntry, getPairKey, renderHistoryHTML } from "./history.js";
@@ -39,6 +39,13 @@ function escapeHtml(str) {
 
 function debugLog(...args) {
     if (extension_settings[extensionName]?.debug) console.log("[RT]", ...args);
+}
+
+const TIMEOUT_MS = 200000;
+function withTimeout(p, ms) {
+    let t;
+    const tP = new Promise((_, r) => { t = setTimeout(() => r(new Error("TIMEOUT")), ms); });
+    return Promise.race([p, tP]).finally(() => clearTimeout(t));
 }
 
 // =====================
@@ -91,6 +98,7 @@ function applySettingsToUI() {
     $('#rt-debug').prop('checked', settings.debug);
     $('#rt-enable-decay').prop('checked', settings.enableDecay ?? true);
     $('#rt-enable-adv-stats').prop('checked', settings.enableAdvStats ?? true);
+    $('#rt-enable-system-messages').prop('checked', settings.enableSystemMessages ?? false);
     updateCustomBonds(settings.customBonds || []);
     loadRelationsFromSettings();
 }
@@ -112,6 +120,7 @@ function saveSettings() {
         debug: $('#rt-debug').prop('checked') ?? current.debug,
         enableDecay: $('#rt-enable-decay').prop('checked') ?? current.enableDecay ?? true,
         enableAdvStats: $('#rt-enable-adv-stats').prop('checked') ?? current.enableAdvStats ?? true,
+        enableSystemMessages: $('#rt-enable-system-messages').prop('checked') ?? current.enableSystemMessages ?? false,
         resumeLength: $('#rt-resume-length').val() || current.resumeLength || 'short',
     });
     saveSettingsDebounced();
@@ -553,7 +562,7 @@ async function runAIAnalysis(force = false) {
         // Small delay to ensure the last message is committed to context
         await new Promise(r => setTimeout(r, 800));
 
-        let result = ""; const withTimeout = (p, ms) => { let t; const tP = new Promise((_, r) => { t = setTimeout(() => r(new Error("TIMEOUT")), ms); }); return Promise.race([p, tP]).finally(() => clearTimeout(t)); }; const TIMEOUT_MS = 200000;
+        let result = "";
 
         if (settings.connectionProfile) {
             debugLog("Using Connection Profile:", settings.connectionProfile);
@@ -563,11 +572,14 @@ async function runAIAnalysis(force = false) {
             ];
             let response;
             try {
-                response = await withTimeout(ConnectionManagerRequestService.sendRequest(
-                    settings.connectionProfile,
-                    messages,
-                    undefined,
-                    { stream: false } // No extractData — we extract manually for full control
+                response = await withTimeout(
+                    ConnectionManagerRequestService.sendRequest(
+                        settings.connectionProfile,
+                        messages,
+                        undefined,
+                        { stream: false } // No extractData — we extract manually for full control
+                    ),
+                    TIMEOUT_MS
                 );
             } catch (connErr) {
                 // Connection Profile failed — log and bail, DO NOT fall back to Main API
@@ -619,10 +631,10 @@ async function runAIAnalysis(force = false) {
 
             // Bond: extract code from full name e.g. "[P] Platonic" → "[P]"
             if (rel.bond) {
-                const m = rel.bond.match(/^\[([A-Z]+)\]/);
-                if (m) rel.bond = `[${m[1]}]`;
+                const m = rel.bond.match(/^\[([A-Za-z]+)\]/);
+                if (m) rel.bond = `[${m[1].toUpperCase()}]`;
             }
-            if (!VALID_BONDS.includes(rel.bond)) rel.bond = '[P]';
+            if (!RULES_VALID_BONDS.includes(rel.bond)) rel.bond = '[P]';
 
             // Normalize new stats using mechanics
             normalizeStats(rel);
@@ -645,7 +657,7 @@ async function runAIAnalysis(force = false) {
 
         if (normalizedRelations.length === 0) return;
 
-        const msgIndex = context.chat.length;
+        const msgIndex = Math.max(0, context.chat.length - 1);
 
         if (settings.mode === 'hybrid') {
             pendingChanges = { newRelations: normalizedRelations, msgIndex };
@@ -671,11 +683,14 @@ function applyChanges(newRelations, msgIndex) {
         const pairKey = getPairKey(newRel.source, newRel.target);
 
         if (newRel.milestone?.event) {
-            const ms = createMilestoneFromAI(newRel.milestone, msgIndex);
-            addMilestone(milestonesMap, pairKey, ms);
-            changeSummary.push(`🏆 ${newRel.source}→${newRel.target}`);
-            if (getSettings().enableSystemMessages) {
-                pushSystemMessage(`[RT_EVENT] 🏆 Milestone: ${newRel.source} → ${newRel.target}: ${ms.event}`);
+            const existing = (milestonesMap[pairKey] || []).some(m => m.msgIndex === msgIndex && m.event === newRel.milestone.event);
+            if (!existing) {
+                const ms = createMilestoneFromAI(newRel.milestone, msgIndex);
+                addMilestone(milestonesMap, pairKey, ms);
+                changeSummary.push(`🏆 ${newRel.source}→${newRel.target}`);
+                if (getSettings().enableSystemMessages) {
+                    pushSystemMessage(`[RT_EVENT] 🏆 Milestone: ${newRel.source} → ${newRel.target}: ${ms.event}`);
+                }
             }
         }
         delete newRel.milestone;
@@ -841,7 +856,16 @@ function renderCards() {
 
         card.querySelector('.rt-source').textContent = rel.source;
         card.querySelector('.rt-target').textContent = rel.target;
-        card.querySelector('.rt-bond-type').value = rel.bond;
+
+        const bondSelect = card.querySelector('.rt-bond-type');
+        bondSelect.innerHTML = '';
+        for (const b of ALL_BONDS) {
+            const opt = document.createElement('option');
+            opt.value = b.code;
+            opt.textContent = `${b.emoji} ${b.name}`;
+            bondSelect.appendChild(opt);
+        }
+        bondSelect.value = rel.bond;
 
         const tierSelect = card.querySelector('.rt-tier');
         updateTierDropdown(tierSelect, rel.bond, rel.tier);
@@ -1106,11 +1130,14 @@ async function scanCharactersAI() {
             { role: "system", content: "You are an entity extractor." },
             { role: "user", content: aiPrompt }
         ];
-        const response = await withTimeout(ConnectionManagerRequestService.sendRequest(
-            cp,
-            messages,
-            undefined,
-            { stream: false }
+        const response = await withTimeout(
+            ConnectionManagerRequestService.sendRequest(
+                cp,
+                messages,
+                undefined,
+                { stream: false }
+            ),
+            TIMEOUT_MS
         );
         const result = extractTextFromResponse(response);
         let names = [];
@@ -1161,7 +1188,7 @@ function exportRelations() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = `relations_${getChatKey() || 'export'}.json`; a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     if (typeof toastr !== "undefined") toastr.info("Relations exported!", "Relations Tracker");
 }
 
@@ -1171,7 +1198,19 @@ function importRelations(file) {
         try {
             const data = JSON.parse(e.target.result);
             if (data.relations && Array.isArray(data.relations)) {
-                relationsData = data.relations;
+                relationsData = data.relations.map(r => {
+                    const rel = { ...r };
+                    if (!RULES_VALID_BONDS.includes(rel.bond)) rel.bond = '[P]';
+                    rel.cp = typeof rel.cp === 'number' ? rel.cp : 0;
+                    rel.cp = clampCP(rel.bond, rel.cp);
+                    rel.tier = getTierFromCP(rel.cp);
+                    rel.trust = typeof rel.trust === 'number' ? Math.max(-100, Math.min(100, rel.trust)) : 0;
+                    rel.lust = typeof rel.lust === 'number' ? Math.max(-100, Math.min(100, rel.lust)) : 0;
+                    rel.status = typeof rel.status === 'string' ? rel.status : '';
+                    rel.label = typeof rel.label === 'string' ? rel.label : '';
+                    rel.locked = !!rel.locked;
+                    return rel;
+                });
                 historyMap = data.history || {};
                 milestonesMap = data.milestones || {};
                 renderCards(); injectIntoPrompt(); saveRelations();
@@ -1276,11 +1315,14 @@ async function generateResume(data) {
     if (typeof toastr !== "undefined") toastr.info("Generating resume...", "Relations Tracker");
 
     try {
-        const response = await withTimeout(ConnectionManagerRequestService.sendRequest(
-            cp,
-            [{ role: "user", content: prompt }],
-            undefined,
-            { stream: false, extractData: true }
+        const response = await withTimeout(
+            ConnectionManagerRequestService.sendRequest(
+                cp,
+                [{ role: "user", content: prompt }],
+                undefined,
+                { stream: false, extractData: true }
+            ),
+            TIMEOUT_MS
         );
         const summary = extractTextFromResponse(response);
 
@@ -1413,7 +1455,7 @@ async function initUI() {
         });
 
         // Settings controls
-        $('#rt-smart-scan, #rt-debug').on('change', saveSettings);
+        $('#rt-smart-scan, #rt-debug, #rt-enable-decay, #rt-enable-adv-stats, #rt-enable-system-messages').on('change', saveSettings);
         $('#rt-scan-depth').on('input change', saveSettings);
         $('#rt-prompt-lang, #rt-connection-profile, #rt-resume-length').on('change', saveSettings);
 
@@ -1502,8 +1544,11 @@ async function initUI() {
 
             toastr?.info("Generating options via AI...", "Relations Tracker");
             try {
-                const response = await withTimeout(ConnectionManagerRequestService.sendRequest(
-                    cp, [{ role: "user", content: prompt }], undefined, { stream: false, extractData: true }
+                const response = await withTimeout(
+                    ConnectionManagerRequestService.sendRequest(
+                        cp, [{ role: "user", content: prompt }], undefined, { stream: false, extractData: true }
+                    ),
+                    TIMEOUT_MS
                 );
                 const rawText = extractTextFromResponse(response);
 
@@ -1540,7 +1585,7 @@ async function initUI() {
         // Custom Bonds — Add
         document.getElementById('rt-cb-add')?.addEventListener('click', () => {
             const settings = getSettings();
-            const code = document.getElementById('rt-cb-code').value.trim();
+            const code = document.getElementById('rt-cb-code').value.trim().toUpperCase();
             const name = document.getElementById('rt-cb-name').value.trim();
             const color = document.getElementById('rt-cb-color').value;
             const behavior = document.getElementById('rt-cb-behavior').value.trim();

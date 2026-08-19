@@ -2,6 +2,16 @@ export const MILESTONE_ICONS = ['🏆', '💕', '⚔', '🤝', '💔', '🔥', '
 
 import { t } from "./i18n.js";
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 export function formatTime(timestamp) {
     const d = new Date(timestamp);
     const pad = n => String(n).padStart(2, '0');
@@ -43,9 +53,9 @@ export function renderMilestonesHTML(milestones) {
     return milestones.map(m => {
         const time = formatTime(m.timestamp);
         return `<div class="rt-milestone-entry">
-            <span class="rt-milestone-icon">${m.icon}</span>
+            <span class="rt-milestone-icon">${escapeHtml(m.icon)}</span>
             <span class="rt-milestone-meta">[#${m.msgIndex}] ${time}</span>
-            <span class="rt-milestone-text">${m.event}</span>
+            <span class="rt-milestone-text">${escapeHtml(m.event)}</span>
         </div>`;
     }).join('');
 }

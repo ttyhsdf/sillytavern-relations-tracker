@@ -33,7 +33,7 @@ Fully optimized for mobile devices — names truncate with ellipsis, cards stack
 Every CP, Tier, Bond, and Label change is recorded with timestamps. Click the 🕐 icon on any card to view the change history.
 
 ### 🧠 Smart Scan
-Compresses chat messages before sending to AI — strips HTML/markdown and truncates to 300 chars per message. Analyze 20+ messages for the cost of 5.
+Compresses chat messages before sending to AI — strips HTML/markdown and truncates to 400 chars per message. Analyze 20+ messages for the cost of 5.
 
 ### 💾 Export / Import
 - **Export**: Download all relationships as a JSON file

@@ -2,6 +2,16 @@
 
 const MAX_HISTORY = 20; // Max entries per relationship pair
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 export function createHistoryEntry(oldRel, newRel, messageIndex) {
     const changes = [];
     
@@ -62,7 +72,7 @@ export function renderHistoryHTML(entries) {
         return `<div class="rt-history-entry ${cpClass}">
             <span class="rt-hist-time">${time}</span>
             <span class="rt-hist-msg">#${e.msgIndex}</span>
-            <span class="rt-hist-changes">${e.changes}</span>
+            <span class="rt-hist-changes">${escapeHtml(e.changes)}</span>
         </div>`;
     }).join('');
 }
