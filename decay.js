@@ -25,7 +25,7 @@ export function calculateDecay(relation, currentMsgCount) {
     const rate = getDecayRate(relation.bond);
     if (rate.threshold === null) return newCp;
 
-    const msgsSinceInteraction = currentMsgCount - relation.lastInteractionMsg;
+    const baselineMsg = (typeof relation.lastDecayMsg === "number" && relation.lastDecayMsg > relation.lastInteractionMsg) ? relation.lastDecayMsg : relation.lastInteractionMsg; const msgsSinceInteraction = currentMsgCount - baselineMsg;
     
     if (msgsSinceInteraction >= rate.threshold) {
         // Calculate how many times decay should apply

@@ -553,7 +553,7 @@ async function runAIAnalysis(force = false) {
         // Small delay to ensure the last message is committed to context
         await new Promise(r => setTimeout(r, 800));
 
-        let result = "";
+        let result = ""; const withTimeout = (p, ms) => { let t; const tP = new Promise((_, r) => { t = setTimeout(() => r(new Error("TIMEOUT")), ms); }); return Promise.race([p, tP]).finally(() => clearTimeout(t)); }; const TIMEOUT_MS = 200000;
 
         if (settings.connectionProfile) {
             debugLog("Using Connection Profile:", settings.connectionProfile);
@@ -563,7 +563,7 @@ async function runAIAnalysis(force = false) {
             ];
             let response;
             try {
-                response = await ConnectionManagerRequestService.sendRequest(
+                response = await withTimeout(ConnectionManagerRequestService.sendRequest(
                     settings.connectionProfile,
                     messages,
                     undefined,
@@ -581,7 +581,7 @@ async function runAIAnalysis(force = false) {
         } else {
             debugLog("Using Main API");
             try {
-                result = await generateRaw({ prompt: recentMessages, systemPrompt: sysPrompt, quietToLoud: true });
+                result = await withTimeout(generateRaw({ prompt: recentMessages, systemPrompt: sysPrompt, quietToLoud: true }), TIMEOUT_MS);
             } catch (mainErr) {
                 console.error("[RT] Main API request failed:", mainErr);
                 return;
@@ -1106,7 +1106,7 @@ async function scanCharactersAI() {
             { role: "system", content: "You are an entity extractor." },
             { role: "user", content: aiPrompt }
         ];
-        const response = await ConnectionManagerRequestService.sendRequest(
+        const response = await withTimeout(ConnectionManagerRequestService.sendRequest(
             cp,
             messages,
             undefined,
@@ -1276,7 +1276,7 @@ async function generateResume(data) {
     if (typeof toastr !== "undefined") toastr.info("Generating resume...", "Relations Tracker");
 
     try {
-        const response = await ConnectionManagerRequestService.sendRequest(
+        const response = await withTimeout(ConnectionManagerRequestService.sendRequest(
             cp,
             [{ role: "user", content: prompt }],
             undefined,
@@ -1502,7 +1502,7 @@ async function initUI() {
 
             toastr?.info("Generating options via AI...", "Relations Tracker");
             try {
-                const response = await ConnectionManagerRequestService.sendRequest(
+                const response = await withTimeout(ConnectionManagerRequestService.sendRequest(
                     cp, [{ role: "user", content: prompt }], undefined, { stream: false, extractData: true }
                 );
                 const rawText = extractTextFromResponse(response);
