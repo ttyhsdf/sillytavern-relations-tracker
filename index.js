@@ -417,6 +417,38 @@ function buildRelationsTag() {
     return `<!--RELATIONS_ARCHIVE:${parts.join(' / ')}-->`;
 }
 
+const PROMPT_BLOCK_LABELS = {
+    EN: { header: '[RELATIONSHIP STATE]', bonds: 'Bonds', tiers: 'Tiers' },
+    RU: { header: '[СОСТОЯНИЕ ОТНОШЕНИЙ]', bonds: 'Связи', tiers: 'Уровни' },
+    UK: { header: '[СТАН СТОСУНКІВ]', bonds: "Зв'язки", tiers: 'Рівні' },
+};
+
+function buildRelationsPromptBlock() {
+    if (relationsData.length === 0) return "";
+    const settings = getSettings();
+    const labels = PROMPT_BLOCK_LABELS[settings.promptLang] || PROMPT_BLOCK_LABELS.EN;
+
+    const lines = [];
+    lines.push(labels.header);
+    lines.push(`${labels.bonds}: ${ALL_BONDS.map(b => `${b.code} ${b.name}`).join(' · ')}`);
+    lines.push(`${labels.tiers}: Frozen (≤-70) · Cold (-69..-40) · Distant (-39..-10) · Neutral (-9..9) · Warm (10..39) · Close (40..69) · Devoted (≥70)`);
+    lines.push('');
+
+    for (const rel of relationsData) {
+        const bondInfo = ALL_BONDS.find(b => b.code === rel.bond);
+        const bondName = bondInfo ? bondInfo.name : rel.bond;
+        let line = `${escapeHtml(rel.source)} → ${escapeHtml(rel.target)}: CP ${rel.cp} (${getTierFromCP(rel.cp)}) · ${rel.bond} ${bondName}`;
+        if (rel.label) line += ` · "${escapeHtml(rel.label)}"`;
+        if (settings.enableAdvStats) {
+            line += ` · Trust ${rel.trust ?? 0} · Lust ${rel.lust ?? 0}`;
+        }
+        if (rel.status) line += ` · Status: ${escapeHtml(rel.status)}`;
+        lines.push(line);
+    }
+
+    return lines.join('\n');
+}
+
 // =====================
 // Chat Scanning
 // =====================
@@ -490,24 +522,24 @@ function scanChatForRelations() {
 }
 
 function injectIntoPrompt() {
-    let tag = buildRelationsTag();
-    if (!tag) return;
+    let block = buildRelationsPromptBlock();
+    if (!block) return;
 
     const settings = getSettings();
     if (settings.nlResume) {
         if (typeof settings.nlResume === 'string') {
-            tag += `\n[RELATIONS SUMMARY: ${settings.nlResume}]`;
+            block += `\n[RELATIONS SUMMARY: ${settings.nlResume}]`;
         } else if (Array.isArray(settings.nlResume)) {
             const summaryStr = settings.nlResume.map(c => `${c.character}: ${c.summary}`).join('\n');
-            tag += `\n[RELATIONS SUMMARY:\n${summaryStr}\n]`;
+            block += `\n[RELATIONS SUMMARY:\n${summaryStr}\n]`;
         }
     }
 
     try {
-        setExtensionPrompt(extensionName, tag, 1, 0);
+        setExtensionPrompt(extensionName, block, 1, 0);
     } catch {
         const context = getContext();
-        if (context?.extensionPrompt) context.extensionPrompt["relationsTracker"] = tag;
+        if (context?.extensionPrompt) context.extensionPrompt["relationsTracker"] = block;
     }
 }
 

@@ -56,7 +56,7 @@ bond  — one of: [R] Romantic, [P] Platonic, [PL] Platonic Love, [F] Family, [H
    - NEGATIVE EVENTS: Harsh words, betrayal, lying, or ignoring a character's boundaries MUST result in significant CP and Trust drops (-3 to -10 depending on severity). Characters hold grudges.
    - Only give +3 to +5 for truly significant, earned positive emotional milestones.
 3. tier MUST correspond to the cp range:
-   Frozen ≤ -60 | Cold -59…-30 | Distant -29…-5 | Neutral -4…15 | Warm 16…45 | Close 46…75 | Devoted 76…100
+   Frozen ≤ -70 | Cold -69…-40 | Distant -39…-10 | Neutral -9…9 | Warm 10…39 | Close 40…69 | Devoted ≥ 70
 4. label — a short 2-4 word phrase describing the current emotional state between the pair (e.g. "playful banter", "bitter resentment").
 
 ─── BOND TRANSITIONS ───
@@ -118,7 +118,7 @@ bond  — одно из: [R] Романтика, [P] Платоника, [PL] П
    - НЕГАТИВНЫЕ СОБЫТИЯ: Грубые слова, предательство, ложь или игнорирование личных границ ДОЛЖНЫ приводить к значительному падению CP и Trust (-3...-10 очков). Персонажи помнят обиды.
    - Давай +3...+5 только за действительно значимые, заслуженные позитивные эмоциональные этапы.
 3. tier ДОЛЖЕН соответствовать диапазону cp:
-   Frozen ≤ -60 | Cold -59…-30 | Distant -29…-5 | Neutral -4…15 | Warm 16…45 | Close 46…75 | Devoted 76…100
+   Frozen ≤ -70 | Cold -69…-40 | Distant -39…-10 | Neutral -9…9 | Warm 10…39 | Close 40…69 | Devoted ≥ 70
 4. label — короткая фраза из 2-4 слов, описывающая текущее эмоциональное состояние пары (например, «игривая перебранка», «горькая обида»).
 
 ─── ПЕРЕХОДЫ СВЯЗЕЙ ───
@@ -180,7 +180,7 @@ bond  — одне з: [R] Романтика, [P] Платоніка, [PL] Пл
    - НЕГАТИВНІ ПОДІЇ: Грубі слова, зрада, брехня або ігнорування особистих кордонів ПОВИННІ призводити до значного падіння CP і Trust (-3...-10 очок). Персонажі пам'ятають образи.
    - Давай +3...+5 тільки за дійсно значущі, заслужені позитивні емоційні етапи.
 3. tier МУСИТЬ відповідати діапазону cp:
-   Frozen ≤ -60 | Cold -59…-30 | Distant -29…-5 | Neutral -4…15 | Warm 16…45 | Close 46…75 | Devoted 76…100
+   Frozen ≤ -70 | Cold -69…-40 | Distant -39…-10 | Neutral -9…9 | Warm 10…39 | Close 40…69 | Devoted ≥ 70
 4. label — коротка фраза з 2-4 слів, що описує поточний емоційний стан пари (наприклад, «грайливе дражніння», «гірка образа»).
 
 ─── ПЕРЕХОДИ ЗВ'ЯЗКІВ ───

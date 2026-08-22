@@ -1,4 +1,8 @@
+import { extension_settings } from "../../../extensions.js";
+import { saveSettingsDebounced } from "../../../../script.js";
 import { t } from "./i18n.js";
+
+const extensionName = "sillytavern-relations-tracker";
 
 export let isInfoblockVisible = false;
 let infoblockWrapper = null;
@@ -6,6 +10,8 @@ let infoblockBtn = null;
 let infoblockPanel = null;
 let infoblockClose = null;
 let infoblockContent = null;
+let dragState = null;
+let suppressClick = false;
 
 /**
  * Initializes the infoblock by fetching the HTML template and injecting it into the body.
@@ -28,6 +34,7 @@ export async function initInfoblock(basePath) {
 
         // Event Listeners
         infoblockBtn.addEventListener('click', () => {
+            if (suppressClick) { suppressClick = false; return; }
             isInfoblockVisible = !isInfoblockVisible;
             infoblockPanel.style.display = isInfoblockVisible ? 'flex' : 'none';
         });
@@ -37,9 +44,74 @@ export async function initInfoblock(basePath) {
             infoblockPanel.style.display = 'none';
         });
 
+        infoblockBtn.addEventListener('pointerdown', beginDrag);
+        infoblockBtn.addEventListener('pointermove', dragMove);
+        infoblockBtn.addEventListener('pointerup', endDrag);
+        infoblockBtn.addEventListener('pointercancel', endDrag);
+
+        applySavedPosition();
+
     } catch (err) {
         console.error('[Relations Tracker] Failed to load infoblock template:', err);
     }
+}
+
+function beginDrag(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    const rect = infoblockWrapper.getBoundingClientRect();
+    dragState = {
+        pointerId: e.pointerId ?? 0,
+        startX: e.clientX,
+        startY: e.clientY,
+        startLeft: rect.left,
+        startTop: rect.top,
+        moved: false,
+    };
+    suppressClick = false;
+    try { infoblockBtn.setPointerCapture(dragState.pointerId); } catch (_) {}
+}
+
+function dragMove(e) {
+    if (!dragState || (e.pointerId ?? 0) !== dragState.pointerId) return;
+    const dx = e.clientX - dragState.startX;
+    const dy = e.clientY - dragState.startY;
+    if (!dragState.moved && Math.hypot(dx, dy) < 5) return;
+    dragState.moved = true;
+    suppressClick = true;
+
+    const btnRect = infoblockBtn.getBoundingClientRect();
+    const left = Math.max(0, Math.min(window.innerWidth - btnRect.width, dragState.startLeft + dx));
+    const top = Math.max(0, Math.min(window.innerHeight - btnRect.height, dragState.startTop + dy));
+
+    infoblockWrapper.style.left = left + 'px';
+    infoblockWrapper.style.top = top + 'px';
+    infoblockWrapper.style.right = 'auto';
+}
+
+function endDrag(e) {
+    if (!dragState || (e.pointerId ?? 0) !== dragState.pointerId) return;
+    if (dragState.moved) persistPosition();
+    dragState = null;
+}
+
+function persistPosition() {
+    const left = parseInt(infoblockWrapper.style.left, 10);
+    const top = parseInt(infoblockWrapper.style.top, 10);
+    if (Number.isNaN(left) || Number.isNaN(top)) return;
+    if (!extension_settings[extensionName]) extension_settings[extensionName] = {};
+    extension_settings[extensionName].infoblockPos = { left, top };
+    saveSettingsDebounced();
+}
+
+function applySavedPosition() {
+    const pos = extension_settings[extensionName]?.infoblockPos;
+    if (!pos || typeof pos.left !== 'number' || typeof pos.top !== 'number') return;
+    const btnRect = infoblockBtn.getBoundingClientRect();
+    const left = Math.max(0, Math.min(window.innerWidth - btnRect.width, pos.left));
+    const top = Math.max(0, Math.min(window.innerHeight - btnRect.height, pos.top));
+    infoblockWrapper.style.left = left + 'px';
+    infoblockWrapper.style.top = top + 'px';
+    infoblockWrapper.style.right = 'auto';
 }
 
 /**
